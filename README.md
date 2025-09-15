@@ -1,61 +1,198 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Configuraciones realizadas y cómo verificarlas (Actividad 3)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+> Proyecto: **Laravel – Doctor Appointment (4B)**
+> Commit solicitado: `chore: configure MySQL connection, timezone, language and profile photo`
 
-## About Laravel
+Este README documenta exactamente **qué cambié** y **cómo verificarlo**, con base en los archivos que me compartiste: `.env`, `config/app.php` y `config/jetstream.php`.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 0) Resumen de cambios
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+* **Idioma por defecto**: Español (`APP_LOCALE=es`).
+* **Zona horaria**: `America/Merida` en `config/app.php`.
+* **Conexión MySQL**: configurada en `.env` (`appointment_db_4b`, usuario `laravel`).
+* **Sesiones / Cache / Queue**: mediante **base de datos** (tablas necesarias).
+* **Fotos de perfil (Jetstream)**: activadas y guardadas en **disco `public`** (con `storage:link`).
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 1) `.env` – Configuración aplicada
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+```dotenv
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=appointment_db_4b
+DB_USERNAME=laravel
+DB_PASSWORD='aqui va el password'   # Importante: comillas si contiene # o caracteres especiales o dejarlo vacio en caso de no tener nada
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Cómo verificar `.env`
 
-## Laravel Sponsors
+* **Locale / Timezone reflejados por la app** (ver abajo en sección 2).
+* **Conexión a MySQL**:
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+  ```bash
+  php artisan migrate:status   # Si conecta, lista migraciones
+  ```
+* **Drivers database (sesión/cola/cache)**: deben existir las **tablas** respectivas tras ejecutar los comandos de la sección 4.
 
-### Premium Partners
+> Nota: si cambias `.env`, recuerda limpiar/recachear:
+> `php artisan config:clear && php artisan cache:clear && php artisan config:cache`
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+---
 
-## Contributing
+## 2) `config/app.php` – Idioma y zona horaria
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Ajustes aplicados:
 
-## Code of Conduct
+```php
+'timezone' => 'America/Merida',
+'locale' => env('APP_LOCALE', 'en'),     // Lee 'es' desde .env
+'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
+'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Cómo verificar idioma/zonahoraria
 
-## Security Vulnerabilities
+```bash
+php artisan tinker <<'PHP'
+echo config('app.locale')."
+";        // esperado: es
+echo config('app.timezone')."
+";      // esperado: America/Merida
+PHP
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+También puedes revisar `php artisan about` y confirmar **Application locale** y **Timezone**.
 
-## License
+---
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## 3) `config/jetstream.php` – Fotos de perfil
+
+Ajustes relevantes recibidos:
+
+```php
+'features' => [
+    // Features::termsAndPrivacyPolicy(),
+    Features::profilePhotos(),    // Habilitado: fotos de perfil
+    // Features::api(),
+    // Features::teams(['invitations' => true]),
+    Features::accountDeletion(),
+],
+
+'profile_photo_disk' => 'public', // Se guardan en el disco "public"
+```
+
+### Requisitos y pasos
+
+1. Crear el **enlace simbólico** para servir archivos públicos:
+
+```bash
+php artisan storage:link
+```
+
+2. Asegurar que el **disco `public`** exista (por defecto mapea a `storage/app/public` → `public/storage`).
+3. Ir a **Perfil de usuario** (ruta Jetstream `/user/profile`) y **subir tu foto** del **Tec de Software**.
+
+### Cómo verificar (y obtener la captura para la entrega)
+
+* Entra a `http://localhost:8000/user/profile`, sube la foto y verifica que se muestre.
+* A nivel de archivos, debería existir algo como `storage/app/public/profile-photos/<id>.jpg` y accesible vía `public/storage/profile-photos/...`.
+* **Toma la captura de pantalla** mostrando la foto de perfil visible en la UI (requisito de la actividad).
+
+> Tip: Si no carga la imagen, revisa permisos de `storage/` y que el symlink `public/storage` exista (`ls -l public/ | grep storage`).
+
+---
+
+## 4) Sesiones, Cache y Queue en base de datos
+
+Tu `.env` indica `SESSION_DRIVER=database`, `CACHE_STORE=database` y `QUEUE_CONNECTION=database`. Para que funcionen:
+
+```bash
+# Tablas necesarias
+php artisan session:table
+php artisan queue:table
+php artisan queue:failed-table
+php artisan cache:table
+php artisan migrate
+```
+
+### Cómo verificar
+
+* **Tablas** presentes: `sessions`, `jobs`, `failed_jobs`, `cache`.
+
+  ```sql
+  SHOW TABLES;
+  SELECT COUNT(*) FROM sessions;   -- debe incrementarse al iniciar sesión
+  ```
+* Probar un **job** simple (opcional) o ejecutar `php artisan queue:work` en otra terminal y observar que no hay errores de conexión.
+
+---
+
+## 5) MySQL – Creación de BD/usuario y colación
+
+Si aún no existen, estos comandos (ejemplo) crean la BD y el usuario de `.env`:
+
+```sql
+CREATE DATABASE IF NOT EXISTS appointment_db_4b
+  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+CREATE USER IF NOT EXISTS 'laravel'@'localhost' IDENTIFIED BY 'Laravel123!#';
+GRANT ALL PRIVILEGES ON appointment_db_4b.* TO 'laravel'@'localhost';
+FLUSH PRIVILEGES;
+```
+
+### Cómo verificar conexión/codificación
+
+```bash
+php artisan migrate:status
+```
+
+```sql
+SELECT @@version, @@global.time_zone, @@session.time_zone;  -- Opcional, para revisar TZ del servidor
+SHOW VARIABLES LIKE 'character_set%';
+SHOW VARIABLES LIKE 'collation%';         -- Debe mostrar utf8mb4/utf8mb4_unicode_ci
+```
+
+> Nota: La zona horaria de MySQL no afecta la TZ de Laravel; ésta ya está fijada en `config/app.php`. Aun así, puedes alinear MySQL si lo requieres.
+
+---
+
+## 6) Verificación integral (pasos rápidos)
+
+```bash
+# 1) Limpiar/recachear config (si tocaste .env)
+php artisan config:clear && php artisan cache:clear && php artisan config:cache
+
+# 2) Idioma y zona horaria
+php artisan tinker <<'PHP'
+echo config('app.locale')."
+";        // es
+echo config('app.timezone')."
+";      // America/Merida
+PHP
+
+# 3) DB funcionando y migraciones
+php artisan migrate:status
+
+# 4) Tablas de sesión/cola/cache creadas
+mysql -u laravel -p'Laravel123!#' -h 127.0.0.1 -e "USE appointment_db_4b; SHOW TABLES;"
+
+# 5) Storage enlazado (para fotos de perfil)
+[ -L public/storage ] && echo "storage ok" || echo "storage faltante"
+
+# 6) Subir foto en /user/profile y tomar captura
+# (Hecho desde la interfaz web)
+```
+
+---
+
+## 7) Personalización visual básica (punto de la actividad)
+
+* **Nombre de la app**: mostrado en la UI mediante `APP_NAME` (puedes ajustar a futuro).
+* **Idioma español**: valida textos y mensajes de validación en español (si agregas archivos de `lang/es/` o paquetes de localización).
+* **Foto de perfil**: visible en el perfil (Jetstream) tras `storage:link`.
+
+> Si necesitas traducir mensajes específicos, añade/edita `lang/es/*.php` o instala paquetes de localización de Laravel.
