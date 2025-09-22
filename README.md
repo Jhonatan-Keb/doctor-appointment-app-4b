@@ -1,3 +1,4 @@
+````markdown
 # Configuraciones realizadas y cómo verificarlas (Actividad 3)
 
 > Proyecto: **Laravel – Doctor Appointment (4B)**
@@ -14,6 +15,11 @@ Este README documenta exactamente **qué cambié** y **cómo verificarlo**, con 
 * **Conexión MySQL**: configurada en `.env` (`appointment_db_4b`, usuario `laravel`).
 * **Sesiones / Cache / Queue**: mediante **base de datos** (tablas necesarias).
 * **Fotos de perfil (Jetstream)**: activadas y guardadas en **disco `public`** (con `storage:link`).
+* **Nuevo layout `AdminLayout`** creado en `resources/views/layouts/`.
+* **Integración de Flowbite** para sidebar y navbar.
+* **Separación de código en includes** usando `@include`.
+* **Uso de contenido dinámico con `{{$slot}}`** en dashboard.blade.php.
+* **Documentación actualizada** en este README.
 
 ---
 
@@ -25,8 +31,8 @@ DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_DATABASE=appointment_db_4b
 DB_USERNAME=laravel
-DB_PASSWORD='aqui va el password'   # Importante: comillas si contiene # o caracteres especiales o dejarlo vacio en caso de no tener nada
-```
+DB_PASSWORD='aqui va el password'   # Importante: comillas si contiene # o caracteres especiales
+````
 
 ### Cómo verificar `.env`
 
@@ -49,7 +55,7 @@ Ajustes aplicados:
 
 ```php
 'timezone' => 'America/Merida',
-'locale' => env('APP_LOCALE', 'en'),     // Lee 'es' desde .env
+'locale' => env('APP_LOCALE', 'en'),
 'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
 'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
 ```
@@ -58,10 +64,8 @@ Ajustes aplicados:
 
 ```bash
 php artisan tinker <<'PHP'
-echo config('app.locale')."
-";        // esperado: es
-echo config('app.timezone')."
-";      // esperado: America/Merida
+echo config('app.locale')."\n";        // esperado: es
+echo config('app.timezone')."\n";      // esperado: America/Merida
 PHP
 ```
 
@@ -75,43 +79,26 @@ Ajustes relevantes recibidos:
 
 ```php
 'features' => [
-    // Features::termsAndPrivacyPolicy(),
-    Features::profilePhotos(),    // Habilitado: fotos de perfil
-    // Features::api(),
-    // Features::teams(['invitations' => true]),
+    Features::profilePhotos(),
     Features::accountDeletion(),
 ],
 
-'profile_photo_disk' => 'public', // Se guardan en el disco "public"
+'profile_photo_disk' => 'public',
 ```
 
-### Requisitos y pasos
-
-1. Crear el **enlace simbólico** para servir archivos públicos:
+### Pasos
 
 ```bash
 php artisan storage:link
 ```
 
-2. Asegurar que el **disco `public`** exista (por defecto mapea a `storage/app/public` → `public/storage`).
-3. Ir a **Perfil de usuario** (ruta Jetstream `/user/profile`) y **subir tu foto** del **Tec de Software**.
-
-### Cómo verificar (y obtener la captura para la entrega)
-
-* Entra a `http://localhost:8000/user/profile`, sube la foto y verifica que se muestre.
-* A nivel de archivos, debería existir algo como `storage/app/public/profile-photos/<id>.jpg` y accesible vía `public/storage/profile-photos/...`.
-* **Toma la captura de pantalla** mostrando la foto de perfil visible en la UI (requisito de la actividad).
-
-> Tip: Si no carga la imagen, revisa permisos de `storage/` y que el symlink `public/storage` exista (`ls -l public/ | grep storage`).
+Luego subir foto de perfil en `/user/profile` y verificar que se guarde en `storage/app/public/profile-photos/`.
 
 ---
 
 ## 4) Sesiones, Cache y Queue en base de datos
 
-Tu `.env` indica `SESSION_DRIVER=database`, `CACHE_STORE=database` y `QUEUE_CONNECTION=database`. Para que funcionen:
-
 ```bash
-# Tablas necesarias
 php artisan session:table
 php artisan queue:table
 php artisan queue:failed-table
@@ -119,80 +106,112 @@ php artisan cache:table
 php artisan migrate
 ```
 
-### Cómo verificar
-
-* **Tablas** presentes: `sessions`, `jobs`, `failed_jobs`, `cache`.
-
-  ```sql
-  SHOW TABLES;
-  SELECT COUNT(*) FROM sessions;   -- debe incrementarse al iniciar sesión
-  ```
-* Probar un **job** simple (opcional) o ejecutar `php artisan queue:work` en otra terminal y observar que no hay errores de conexión.
+Confirmar que existan las tablas `sessions`, `jobs`, `failed_jobs`, `cache`.
 
 ---
 
-## 5) MySQL – Creación de BD/usuario y colación
+## 5) Creación de `AdminLayout`
 
-Si aún no existen, estos comandos (ejemplo) crean la BD y el usuario de `.env`:
+1. Comando Artisan:
 
-```sql
-CREATE DATABASE IF NOT EXISTS appointment_db_4b
-  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+   ```bash
+   php artisan make:component AdminLayout
+   ```
+2. El layout fue movido a `resources/views/layouts/admin.blade.php` y se incluyó el uso de:
 
-CREATE USER IF NOT EXISTS 'laravel'@'localhost' IDENTIFIED BY 'Laravel123!#';
-GRANT ALL PRIVILEGES ON appointment_db_4b.* TO 'laravel'@'localhost';
-FLUSH PRIVILEGES;
+   ```blade
+   @include('layouts.navbar')
+   @include('layouts.sidebar')
+
+   <main class="p-4 sm:ml-64">
+       {{ $slot }}
+   </main>
+   ```
+3. Cualquier vista que use `<x-admin-layout>` mostrará su contenido en el slot.
+
+---
+
+## 6) Integración de Flowbite
+
+1. Instalación:
+
+   ```bash
+   npm install flowbite --save
+   ```
+
+2. Configuración en `tailwind.config.js`:
+
+   ```js
+   module.exports = {
+     content: [
+       "./resources/**/*.blade.php",
+       "./resources/**/*.js",
+       "./node_modules/flowbite/**/*.js"
+     ],
+     plugins: [
+       require('flowbite/plugin')
+     ],
+   }
+   ```
+
+3. Agregado script en layout:
+
+   ```blade
+   <script src="{{ asset('node_modules/flowbite/dist/flowbite.min.js') }}"></script>
+   ```
+
+4. Sidebar y navbar fueron implementados con componentes de Flowbite.
+   Botones funcionales: desplegar menú de usuario y redirigir a la información de usuario.
+
+---
+
+## 7) Separación de código en includes
+
+* `resources/views/layouts/navbar.blade.php`
+* `resources/views/layouts/sidebar.blade.php`
+
+Ambos se incluyen con `@include`.
+
+---
+
+## 8) Uso de `{{$slot}}` en dashboard
+
+`resources/views/layouts/admin.blade.php` contiene:
+
+```blade
+<main>
+    {{ $slot }}
+</main>
 ```
 
-### Cómo verificar conexión/codificación
+Así el contenido de `dashboard.blade.php` es dinámico.
+
+---
+
+## 9) Verificación final
 
 ```bash
-php artisan migrate:status
+php artisan config:clear && php artisan cache:clear && php artisan view:clear
+php artisan serve
 ```
 
-```sql
-SELECT @@version, @@global.time_zone, @@session.time_zone;  -- Opcional, para revisar TZ del servidor
-SHOW VARIABLES LIKE 'character_set%';
-SHOW VARIABLES LIKE 'collation%';         -- Debe mostrar utf8mb4/utf8mb4_unicode_ci
-```
-
-> Nota: La zona horaria de MySQL no afecta la TZ de Laravel; ésta ya está fijada en `config/app.php`. Aun así, puedes alinear MySQL si lo requieres.
+* Revisar que el dashboard muestre contenido.
+* Sidebar/ Navbar visibles y operativos.
+* Acceso correcto a perfil de usuario.
 
 ---
 
-## 6) Verificación integral (pasos rápidos)
+## 10) Verificación integral rápida
 
 ```bash
-# 1) Limpiar/recachear config (si tocaste .env)
-php artisan config:clear && php artisan cache:clear && php artisan config:cache
-
-# 2) Idioma y zona horaria
-php artisan tinker <<'PHP'
-echo config('app.locale')."
-";        // es
-echo config('app.timezone')."
-";      // America/Merida
-PHP
-
-# 3) DB funcionando y migraciones
+php artisan about
 php artisan migrate:status
-
-# 4) Tablas de sesión/cola/cache creadas
-mysql -u laravel -p'Laravel123!#' -h 127.0.0.1 -e "USE appointment_db_4b; SHOW TABLES;"
-
-# 5) Storage enlazado (para fotos de perfil)
-[ -L public/storage ] && echo "storage ok" || echo "storage faltante"
-
-# 6) Subir foto en /user/profile y tomar captura
-# (Hecho desde la interfaz web)
+npm run build
 ```
 
----
+Comprobar que:
 
-## 7) Personalización visual básica (punto de la actividad)
-
-* **Nombre de la app**: mostrado en la UI mediante `APP_NAME` (puedes ajustar a futuro).
-* **Idioma español**: valida textos y mensajes de validación en español (si agregas archivos de `lang/es/` o paquetes de localización).
-* **Foto de perfil**: visible en el perfil (Jetstream) tras `storage:link`.
-
-> Si necesitas traducir mensajes específicos, añade/edita `lang/es/*.php` o instala paquetes de localización de Laravel.
+* BD conecta.
+* Storage enlazado.
+* Navbar y sidebar cargan correctamente.
+* Slots muestran contenido dinámico.
