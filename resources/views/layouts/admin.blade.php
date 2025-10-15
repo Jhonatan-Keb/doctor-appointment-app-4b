@@ -14,6 +14,10 @@
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script src="https://kit.fontawesome.com/0d20d99f15.js" crossOrigin="anonymous"></script>
+
+    {{-- WireUI --}}
+    <wireui:scripts />
+
     <!-- Styles -->
     @livewireStyles
 </head>

@@ -5,7 +5,7 @@ $links = [
         'name' => 'Dashboard',
         'icon' => 'fa-solid fa-gauge',
         'href' => route('admin.dashboard'),
-        'active' => request()->routeIs('admin.dashboard'),
+        'active' => request()->routeIs('admin.dashboard')
 ],
 [
   'header' => 'Hospital',
