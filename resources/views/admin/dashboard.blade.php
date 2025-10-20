@@ -4,12 +4,12 @@
         'href' => route('admin.dashboard'),
     ],
     [
-        'name' => 'Sid',
+        'name' => 'Profile',
         'href' => route('admin.dashboard'),
     ],
 
     [
-        'name' => 'Versrappen'
+        'name' => 'Profile'
     ],
 ]">
     Hola desde admin
