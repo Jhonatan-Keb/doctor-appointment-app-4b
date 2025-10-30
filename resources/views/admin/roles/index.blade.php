@@ -1,13 +1,13 @@
-<x-admin-layout
-    title="Roles | HouseMD"
-    :breadcrumb="[
+<x-admin-layout title="Roles | Simify" :breadcrumbs="[
         [
-            'name' => 'Dashboard',
-            'route' => route('admin.dashboard'),
+          'name' => 'Dashboard', 
+          'route' => route('admin.dashboard')
         ],
-    [
-        'name' => 'Roles',
-    ],
-]">
+        [
+          'name' => 'Roles'
+        ],
+    ]">
+
+        @livewire('admin.datatables.role-table')
 
 </x-admin-layout>

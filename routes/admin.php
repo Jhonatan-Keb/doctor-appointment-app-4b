@@ -1,10 +1,12 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\RoleController; // ← ahora apunta al namespace correcto
 
-Route::get('/', function(){
+// Dashboard principal del administrador
+Route::get('/', function () {
     return view('admin.dashboard');
 })->name('dashboard');
 
-//Gestion de roles
+// Gestión de roles
 Route::resource('roles', RoleController::class);
