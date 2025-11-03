@@ -7,6 +7,6 @@
     'name' => 'Profile',
     ],
 ]">
-    Rei Chiquita
+    Hola
 
 </x-admin-layout>
