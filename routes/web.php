@@ -1,8 +1,13 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\RoleController;
 
-Route::redirect('/', '/admin'); // Redirige al admin por defecto
+// Redirige la raíz al prefijo admin
+Route::redirect('/', '/admin');
+
+// Opcional pero útil: que /admin apunte al dashboard
+Route::redirect('/admin', '/admin/dashboard');
 
 Route::middleware([
     'auth:sanctum',
@@ -12,6 +17,9 @@ Route::middleware([
 
     // Dashboard de administrador
     Route::get('/dashboard', function () {
-        return view('admin.dashboard'); // vista en resources/views/admin/dashboard.blade.php
+        return view('admin.dashboard'); // resources/views/admin/dashboard.blade.php
     })->name('dashboard');
+
+    // CRUD de Roles
+    Route::resource('roles', RoleController::class);
 });
