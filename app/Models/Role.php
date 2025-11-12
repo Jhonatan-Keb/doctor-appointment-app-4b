@@ -8,11 +8,6 @@ class Role extends Model
 {
     protected $fillable = [
         'name',
-        'guard_name'
-    ];
-
-    protected $casts = [
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
+        'guard_name',
     ];
 }

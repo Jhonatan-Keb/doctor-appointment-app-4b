@@ -1,7 +1,8 @@
 @props([
-    'title'=>config('app.name', 'Laravel'),
-    'breadcrumbs'=>[]
+    'title' => config('app.name', 'Laravel'),
+    'breadcrumbs' => []
 ])
+
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
@@ -14,37 +15,79 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <script src="https://kit.fontawesome.com/0d20d99f15.js" crossorigin="anonymous"></script>
-    <wireui:scripts />
-    @livewireStyles
+    <script src="https://kit.fontawesome.com/9161014f5f.js" crossorigin="anonymous"></script>
 
-    {{-- SweetAlert flash --}}
-    @if (session('success'))
-        <meta name="flash-success" content="{{ session('success') }}">
-    @endif
-    @if (session('error'))
-        <meta name="flash-error" content="{{ session('error') }}">
-    @endif
+    <!-- Livewire Styles -->
+    @livewireStyles
 </head>
 <body class="font-sans antialiased bg-gray-50">
 
-@include('layouts.includes.admin.navigation')
-@include('layouts.includes.admin.sidebar')
+    {{-- Navegación y barra lateral --}}
+    @include('layouts.includes.admin.navigation')
+    @include('layouts.includes.admin.sidebar')
 
-<div class="p-4 sm:ml-64">
-    <div class="mt-14 flex items-center justify-between w-full">
-        @include('layouts.includes.admin.breadcrumb')
-        <div>{{ $action ?? '' }}</div>
+    <div class="p-4 sm:ml-64">
+        {{-- margen superior para evitar que la barra fija tape el contenido --}}
+        <div class="pt-20 pb-4 flex items-start justify-between">
+            {{-- se intenta cargar breadcrumb desde includes/admin primero --}}
+            @includeFirst(
+                ['layouts.includes.admin.breadcrumb', 'layouts.includes.breadcrumb'],
+                ['breadcrumbs' => $breadcrumbs ?? []]
+            )
+
+            @isset($action)
+                <div class="flex-shrink-0">
+                    {{ $action }}
+                </div>
+            @endisset
+        </div>
+
+        {{ $slot }}
     </div>
 
-    {{ $slot }}
-</div>
+    @stack('modals')
 
-@stack('modals')
-@livewireScripts
-<script src="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.js"></script>
+    <!-- Livewire Scripts -->
+    @livewireScripts
+
+    <!-- Flowbite -->
+    <script src="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.js"></script>
+
+    {{-- Alertas SweetAlert basadas en sesión --}}
+    @if(session('swal'))
+        <script>
+            Swal.fire(@json(session('swal')));
+        </script>
+    @endif
+
+    {{-- Confirmación al eliminar --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const forms = document.querySelectorAll('.delete-form');
+            forms.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    Swal.fire({
+                        title: '¿Estás seguro?',
+                        text: "Esta acción no se puede revertir",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Sí, eliminar',
+                        cancelButtonText: 'Cancelar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.submit();
+                        }
+                    });
+                });
+            });
+        });
+    </script>
 </body>
 </html>

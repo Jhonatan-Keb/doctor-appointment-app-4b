@@ -1,37 +1,47 @@
-<x-admin-layout title="Roles | HouseMD" :breadcrumbs="[
-    ['name' => 'Dashboard', 'href' => route('admin.dashboard')],
-    ['name' => 'Roles', 'href' => route('admin.roles.index')],
-    ['name' => 'Nuevo'],
-]">
+<x-admin-layout
+    title="Roles | HouseMD"
+    :breadcrumbs="[
+        ['name' => 'Dashboard', 'href' => route('admin.dashboard')],
+        ['name' => 'Roles', 'href' => route('admin.roles.index')],
+        ['name' => 'Nuevo'],
+    ]"
+>
+    <x-slot name="action">
+        <x-wire-button href="{{ route('admin.roles.index') }}" gray>
+            Cancelar
+        </x-wire-button>
+        <x-wire-button form="create-role-form" type="submit" blue class="ml-2">
+            <i class="fa-solid fa-floppy-disk"></i>
+            Guardar
+        </x-wire-button>
+    </x-slot>
 
-    <div class="mt-8 max-w-xl">
-        <form action="{{ route('admin.roles.store') }}" method="POST" class="space-y-6">
-            @csrf
+    {{-- ÚNICO formulario (el de la tarjeta). Se eliminó el grupo superior duplicado --}}
+    <div class="max-w-3xl mx-auto">
+        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+            <form id="create-role-form" method="POST" action="{{ route('admin.roles.store') }}">
+                @csrf
 
-            <div>
-                <label for="name" class="block text-sm font-medium text-gray-700">Nombre del rol</label>
+                <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                    Nombre del rol
+                </label>
                 <input
-                    type="text"
                     id="name"
                     name="name"
+                    type="text"
                     value="{{ old('name') }}"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                    placeholder="Ej. Administrador"
+                    placeholder="Ingrese el nombre del rol"
+                    class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500"
+                    autofocus
                     required
                 />
-                @error('name')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-            </div>
 
-            <div class="flex items-center gap-3">
-                <a href="{{ route('admin.roles.index') }}" class="inline-flex items-center px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">
-                    Cancelar
-                </a>
-                <button type="submit" class="inline-flex items-center px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">
-                    Guardar
-                </button>
-            </div>
-        </form>
+                @error('name')
+                    <p class="mt-2 text-sm text-red-600 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-exclamation"></i> {{ $message }}
+                    </p>
+                @enderror
+            </form>
+        </div>
     </div>
 </x-admin-layout>

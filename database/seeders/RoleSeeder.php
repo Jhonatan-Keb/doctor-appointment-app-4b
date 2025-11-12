@@ -15,9 +15,9 @@ class RoleSeeder extends Seeder
     {
         //definir role
         $roles = [
-            'paciente',
-            'doctor',
-            'recepcionista',
+            'Paciente',
+            'Doctor',
+            'Recepcionista',
             'Administrador',
         ];
         //crear en la db
