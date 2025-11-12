@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\UserController;
 
 // Redirige la raíz al prefijo admin
 Route::redirect('/', '/admin');
@@ -22,4 +23,6 @@ Route::middleware([
 
     // CRUD de Roles
     Route::resource('roles', RoleController::class);
+    // CRUD de Usuarios
+    Route::resource('users', UserController::class);
 });
