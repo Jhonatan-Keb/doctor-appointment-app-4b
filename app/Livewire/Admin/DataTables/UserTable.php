@@ -5,44 +5,46 @@ namespace App\Livewire\Admin\DataTables;
 use Rappasoft\LaravelLivewireTables\DataTableComponent;
 use Rappasoft\LaravelLivewireTables\Views\Column;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 
 class UserTable extends DataTableComponent
 {
-    protected $model = User::class;
+    //Se comenta para personalizar consultas
+    //protected $model = User::class;
+
+    //Definie el modelo y su consulta
+    public function builder(): builder
+    {
+        return User::query()->with('roles');
+    }
 
     public function configure(): void
     {
-        $this->setPrimaryKey('id')
-            ->setTableRowUrl(function($row) {
-                return route('admin.users.edit', $row);
-            })
-            ->setTableAttributes(['class' => 'table table-striped table-black-borders table-hover-gray']);
+        $this->setPrimaryKey('id');
     }
+
     public function columns(): array
-{
-    return [
+    {
+        return [
             Column::make("Id", "id")
                 ->sortable(),
             Column::make("Nombre", "name")
-                ->sortable()
-                ->searchable(),
+                ->sortable(),
             Column::make("Email", "email")
-                ->sortable()
-                ->searchable(),
-            Column::make("Rol")
-                ->label(function($row){
-                    return $row->roles->first()?->name ?? 'Sin rol';
-                }),
-            Column::make("Fecha", "created_at")
-                ->sortable()
-                ->format(function($value) {
-                    return $value->format('d/m/Y');
+                ->sortable(),
+           Column::make("Numero de id", "id_number")
+                ->sortable(),
+            Column::make("Telefono", "phone")
+                ->sortable(),
+            Column::make("Rol", "roles")
+                ->label(function($row) {
+                    return $row->roles->first()?->name ?? 'Sin Rol';
                 }),
             Column::make("Acciones")
-                ->label(function($row){
-                    return view('admin.users.actions',
+            ->label(function($row) {
+                return view('admin.users.actions',
                 ['user' => $row]);
-                })
+            })
         ];
     }
 }

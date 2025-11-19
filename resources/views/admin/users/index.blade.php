@@ -20,6 +20,7 @@
 
     <div class="bg-white rounded-lg shadow p-6">
         @livewire('admin.data-tables.user-table')
+
     </div>
 
 </x-admin-layout>
