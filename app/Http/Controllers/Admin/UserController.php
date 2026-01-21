@@ -32,29 +32,26 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+        $data = $request->validate([
+            'name' => 'required|string|min:3|max:255',
+            'email' => 'required|string|unique:users',
             'password' => 'required|string|min:8|confirmed',
-            'role' => 'required|exists:roles,id',
+            'id_number' => 'required|string|min:5|max:20|regex:/^[A-Za-z0-9\-]+$/|unique:users',
+            'phone' => 'required|digits_between:7,15',
+            'address' => 'required|string|min:3|max:255',
+            'role_id' => 'required|exists:roles,id',
         ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
-
-        $role = Role::find($request->role);
-        $user->assignRole($role);
+        $user = User::create($data);
+        $user->roles()->attach($data['role_id']);
 
         session()->flash('swal', [
             'icon' => 'success',
-            'title' => 'Usuario creado correctamente',
+            'title' => 'Usuario creado',
             'text' => 'El usuario se ha creado exitosamente',
         ]);
 
-        return redirect()->route('admin.users.index');
+        return redirect()->route('admin.users.index')->with('success', 'El usuario se ha creado exitosamente');
     }
 
     /**

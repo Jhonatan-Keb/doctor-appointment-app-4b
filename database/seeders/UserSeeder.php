@@ -17,12 +17,12 @@ class UserSeeder extends Seeder
          //Crear un usuario de prueba cada que se ejecuten migraciones
         //php artisan migrate:fresh --seed
         User::factory()->create([
-            'name' => 'Jhonatan Keb',
-            'email' => 'jhony@example.com',
-            'password' => bcrypt('12345678'),
+            'name' => 'Hoshiko Kuro',
+            'email' => 'hoshiko@dendro.com',
+            'password' => bcrypt('KuroHoshiko12!'),
             'id_number' => '123456789',
             'phone' => '5555555555',
-            'adress' => 'Pomuch',
+            'adress' => 'Kanayork',
         ])->assignRole('Doctor');
     }
 }
