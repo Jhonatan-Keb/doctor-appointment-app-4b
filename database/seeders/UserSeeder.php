@@ -23,6 +23,6 @@ class UserSeeder extends Seeder
             'id_number' => '123456789',
             'phone' => '5555555555',
             'adress' => 'Kanayork',
-        ])->assignRole('Doctor');
+        ])->assignRole('Administrador');
     }
 }
