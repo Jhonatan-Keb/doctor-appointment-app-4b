@@ -1,5 +1,5 @@
 <x-admin-layout
-    title="Usuarios | HouseMD"
+    title="Usuarios | Dendro Medical"
     :breadcrumbs="[
         [
             'name' => 'Dashboard',

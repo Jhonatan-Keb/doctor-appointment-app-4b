@@ -1,4 +1,4 @@
-<x-admin-layout title="Usuarios | HouseMD" :breadcrumbs="[
+<x-admin-layout title="Usuarios | Dendro Medical" :breadcrumbs="[
         ['name' => 'Dashboard', 'href' => route('admin.dashboard')],
         ['name' => 'Usuarios', 'href' => route('admin.users.index')],
         ['name' => 'Editar']
