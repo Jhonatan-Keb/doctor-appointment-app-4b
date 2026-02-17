@@ -1,5 +1,5 @@
 <x-admin-layout
-    title="Roles | Dendro Medical"
+    title="Roles | Medify"
     :breadcrumbs="[
         [
             'name' => 'Dashboard',

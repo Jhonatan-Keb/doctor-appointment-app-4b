@@ -1,5 +1,5 @@
 <x-admin-layout
-    title="Usuarios | Dendro Medical"
+    title="Usuarios | Medify"
     :breadcrumbs="[
         [
             'name' => 'Dashboard',
@@ -18,9 +18,9 @@
         </x-wire-button>
     </x-slot>
 
+ 
     <div class="bg-white rounded-lg shadow p-6">
         @livewire('admin.data-tables.user-table')
-
     </div>
 
 </x-admin-layout>

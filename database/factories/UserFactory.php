@@ -29,6 +29,7 @@ class UserFactory extends Factory
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
+            'id_numero' => fake()->unique()->numerify('##########'),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'two_factor_secret' => null,
@@ -36,11 +37,9 @@ class UserFactory extends Factory
             'remember_token' => Str::random(10),
             'profile_photo_path' => null,
             'current_team_id' => null,
-
-            //Nuevos datos
-            'id_number' => strtoupper($this->faker->bothify('ID-######')),
-            'phone' => $this->faker->numerify('9999999999'), //10 digitos
-            'address' => $this->faker->streetAddress(),
+            
+            'phone' => fake()->numerify('##########'),
+            'address' => fake()->address(),
         ];
     }
 

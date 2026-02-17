@@ -3,162 +3,159 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use Illuminate\Http\Request;
+use App\Models\User;
+use App\Models\Patient; // Añadido según el diff
 use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    /**
-     * Muestra la lista de usuarios.
-     */
     public function index()
     {
-        return view('admin.users.index');
+        $users = User::latest()->paginate(10);
+        return view('admin.users.index', compact('users'));
     }
 
     /**
-     * Muestra el formulario para crear un nuevo usuario.
+     * Show the form for creating a new resource.
      */
     public function create()
     {
-        $roles= Role::all();
+        $roles = Role::all();
         return view('admin.users.create', compact('roles'));
     }
 
     /**
-     * Guarda un nuevo usuario (temporalmente vacío).
+     * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'name' => 'required|string|min:3|max:255',
-            'email' => 'required|string|email|unique:users',
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
-            'id_number' => 'required|string|min:5|max:20|regex:/^[A-Za-z0-9\-]+$/|unique:users',
-            'phone' => 'nullable|digits_between:7,15',
-            'address' => 'nullable|string|min:3|max:255',
-            'role_id'=>'required|exists:roles,id',
+            'id_numero' => 'required|string|max:255|unique:users',
+            'phone' => 'required|digits_between:7,15',
+            'role' => 'required|exists:roles,id',
+            'address' => 'required|min:3|string|max:500',
         ]);
 
-        $user = User::create($data);
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'id_numero' => $request->id_numero,
+            'phone' => $request->phone,
+            'address' => $request->address,
+        ]);
 
-        // Asignar rol usando Spatie Permission
-        $role = Role::findOrFail($data['role_id']);
-        $user->assignRole($role);
-
-        session()->flash('swal', [
-            'icon' => 'success',
-            'title' => 'Usuario creado',
-            'text' => 'El usuario ha sido creado exitosamente.',
-            ]);
-
-        //Si el usuario creado es paciente, envia el modulo pacientes
-        if($user::role('Paciente')){
-            //Creamos el registro para un paciente
-            $patient = $user->patient()->create([]);
+        // Asignar el rol al usuario (buscar por id y usar su nombre)
+        $role = Role::find($request->role);
+        if ($role) {
+            $user->assignRole($role->name);
         }
 
-        return redirect()->route('admin.users.index')->with('success', 'Usuario creado exitosamente.');
+        // Lógica agregada: Si el rol (por nombre) es 'Paciente', crear registro en la tabla patients
+        if ($role && $role->name === 'Paciente') {
+            Patient::create([
+                'user_id' => $user->id,
+                'emergency_contact_name' => 'Por definir',
+                'emergency_contact_phone' => '0000000000',
+            ]);
 
+            return redirect()->route('admin.patients.index')
+                ->with('swal', [
+                    'title' => 'Paciente creado',
+                    'text' => 'Complete la información médica del paciente.',
+                    'icon' => 'success',
+                ]);
+        }
 
+        // Redirigir con mensaje de éxito (Actualizado según diff)
+        return redirect()->route('admin.users.index')
+            ->with('success', 'Usuario creado exitosamente.')
+            ->with('swal', [
+                'title' => 'Usuario creado',
+                'text' => 'El usuario ha sido creado exitosamente.',
+                'icon' => 'success',
+            ]);
     }
 
     /**
-     * Muestra el formulario para editar un usuario existente.
+     * Display the specified resource.
+     */
+    public function show(string $id)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
      */
     public function edit(User $user)
     {
-        $roles= Role::all();
+        $roles = Role::all();
         return view('admin.users.edit', compact('user', 'roles'));
     }
 
     /**
-     * Actualiza un usuario existente (temporalmente vacío).
+     * Update the specified resource in storage.
      */
     public function update(Request $request, User $user)
     {
-        $validationRules = [
-            'name' => 'required|string|min:3|max:255',
-            'email' => 'required|string|email|unique:users,email,' . $user->id,
-            'id_number' => 'required|string|min:5|max:20|regex:/^[A-Za-z0-9\-]+$/|unique:users,id_number,' . $user->id,
-            'phone' => 'required|digits_between:7,15',
-            'address' => 'required|string|min:3|max:255',
-            'role_id' => 'required|exists:roles,id',
-        ];
-
-        // Validar contraseña solo si se proporciona
-        if ($request->filled('password')) {
-            $validationRules['password'] = 'required|string|min:8|confirmed';
-        }
-
-        $data = $request->validate($validationRules);
-
-        $user->update([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'id_number' => $data['id_number'],
-            'phone' => $data['phone'],
-            'address' => $data['address'],
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'password' => 'nullable|string|min:8|confirmed',
+            'role' => 'required|exists:roles,id',
         ]);
 
-        // Actualizar contraseña solo si se proporcionó
+        $user->update([
+            'name' => $request->name,
+            'email' => $request->email,
+        ]);
+
         if ($request->filled('password')) {
-            $user->password = $data['password']; // El modelo tiene cast 'hashed', se hasheará automáticamente
-            $user->save();
+            $user->update([
+                'password' => Hash::make($request->password),
+            ]);
         }
 
-        // Actualizar rol usando Spatie Permission
-        $role = Role::findOrFail($data['role_id']);
-        $user->syncRoles([$role]);
+        $role = Role::find($request->role);
+        $user->syncRoles([$role->name]);
 
         session()->flash('swal', [
             'icon' => 'success',
-            'title' => 'Usuario actualizado',
-            'text' => 'El usuario ha sido actualizado exitosamente.',
+            'title' => 'Usuario actualizado correctamente',
+            'text' => 'El usuario ha sido actualizado exitosamente',
         ]);
 
-        return redirect()->route('admin.users.index')->with('success', 'Usuario actualizado exitosamente.');
+        return redirect()->route('admin.users.index');
     }
 
     /**
-     * Elimina un usuario de forma segura.
+     * Remove the specified resource from storage.
      */
     public function destroy(User $user)
     {
-       
-        // Prevenir que el admin se elimine a sí mismo
-        if ($user->id === auth()->id()) {
+        if (auth()->user()->id === $user->id) {
             session()->flash('swal', [
                 'icon' => 'error',
-                'title' => 'Error',
-                'text' => 'No puedes eliminar tu propia cuenta.',
+                'title' => 'Acción no permitida',
+                'text' => 'No puedes eliminar tu propio usuario',
             ]);
-            abort(403, 'No puedes eliminarte a ti mismo.');
+            return redirect()->route('admin.users.index');
         }
 
-        try {
-            // Eliminar roles asociados al usuario usando Spatie Permission
-            $user->roles()->detach();
+        $user->delete();
 
-            // Eliminar usuario (hard delete)
-            $user->delete();
-
-            session()->flash('swal', [
-                'icon' => 'success',
+        return redirect()->route('admin.users.index')
+            ->with('success', 'Usuario eliminado exitosamente.')
+            ->with('swal', [
                 'title' => 'Usuario eliminado',
                 'text' => 'El usuario ha sido eliminado exitosamente.',
+                'icon' => 'success',
             ]);
-
-            return redirect()->route('admin.users.index')->with('success', 'Usuario eliminado exitosamente.');
-        } catch (\Exception $e) {
-            session()->flash('swal', [
-                'icon' => 'error',
-                'title' => 'Error',
-                'text' => 'No se pudo eliminar el usuario. Por favor, intenta nuevamente.',
-            ]);
-
-            return redirect()->route('admin.users.index')->with('error', 'No se pudo eliminar el usuario.');
-        }
     }
 }

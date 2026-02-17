@@ -18,14 +18,9 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
 
-            // Nuevos campos corregidos
-            // Agregamos ->nullable() para que sean opcionales y no bloqueen el registro
-            $table->string('id_number')->nullable(); 
+            $table->string('id_numero')->unique();
             $table->string('phone')->nullable();
-            
-            // Mantenemos 'adress' (con una 'd') tal cual venía en el proyecto 
-            // para no romper el resto del código, pero lo hacemos opcional.
-            $table->string('adress')->nullable(); 
+            $table->string('address')->nullable();
 
             $table->rememberToken();
             $table->foreignId('current_team_id')->nullable();

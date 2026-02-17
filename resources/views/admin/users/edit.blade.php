@@ -1,58 +1,82 @@
-<x-admin-layout title="Usuarios | Dendro Medical" :breadcrumbs="[
-        ['name' => 'Dashboard', 'href' => route('admin.dashboard')],
-        ['name' => 'Usuarios', 'href' => route('admin.users.index')],
-        ['name' => 'Editar']
-    ]"
->
+<x-admin-layout title="Usuarios | Simify" :breadcrumbs="[
+        [
+          'name' => 'Dashboard',
+          'href' => route('admin.dashboard')
+        ],
+        [
+          'name' => 'Usuarios',
+          'href' => route('admin.users.index')
+        ],
+        [
+          'name' => 'Editar'
+        ],
+    ]">
+
     <x-wire-card>
-        <h1 class="text-lg font-medium text-gray-900 border-b pb-2 mb-4">Editar usuario</h1>
+      
 
+
+
+      
         <form action="{{ route('admin.users.update', $user) }}" method="POST">
-            @csrf
-            @method('PUT')
+<div class=" grid grid-cols-1 gap-4 justify-between mb-6">
+          @csrf
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {{-- Nombre --}}
-                <x-wire-input label="Nombre" name="name" value="{{ old('name', $user->name) }}" required />
-
-                {{-- Correo --}}
-                <x-wire-input type="email" label="Correo" name="email" value="{{ old('email', $user->email) }}" required />
-
-                {{-- ID Number (Agregado para que no falle el validate) --}}
-                <x-wire-input label="Número de ID" name="id_number" value="{{ old('id_number', $user->id_number) }}" required />
-
-                {{-- Teléfono --}}
-                <x-wire-input label="Teléfono" name="phone" value="{{ old('phone', $user->phone) }}" required />
-
-                {{-- Dirección --}}
-                <div class="col-span-2">
-                    <x-wire-input label="Dirección" name="address" value="{{ old('address', $user->address) }}" required />
+          @method('PUT')
+    <div>
+      <h1>Usuario</h1>
+    </div>
+                    <div class="w-1/2">
+                    <x-input
+                        label="Nombre"
+                        name="name"
+                        placeholder="Nombre del usuario"
+                        value="{{ old('name', $user->name) }}"
+                    />
                 </div>
 
-                {{-- Rol --}}
-                <div class="col-span-1">
-                    <x-wire-native-select name="role_id" label="Rol de Usuario" required>
-                        @foreach($roles as $role)
-                            <option value="{{ $role->id }}" @selected(old('role_id', $user->roles->first()?->id) == $role->id)>
-                                {{ $role->name }}
-                            </option>
-                        @endforeach
-                    </x-wire-native-select>
-                </div>
-            </div>
+    <div>
+      <h1>Correo</h1>
+    </div>
+              <div class="w-1/2">
+                <x-input
+                label="Email" name="email" type="email" placeholder="usuario@ejemplo.com" value="{{ old('email', $user->email) }}">
+              />
+              </div>
+              
+    <div>
+      <h1>Contraseña</h1>
+    </div>
+              <x-input
 
-            <hr class="my-6">
-            <p class="text-sm text-gray-500 mb-4">Si no deseas cambiar la contraseña, deja los campos vacíos.</p>
+                label="Contraseña (opcional)" name="password" type="password" placeholder="Nueva contraseña">
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <x-wire-input type="password" label="Nueva contraseña" name="password" />
-                <x-wire-input type="password" label="Confirmar contraseña" name="password_confirmation" />
-            </div>
+              </x-input>
 
-            <div class="flex justify-end gap-3">
-                <a href="{{ route('admin.users.index') }}" class="btn btn-secondary">Cancelar</a>
-                <x-wire-button type="submit" blue>Actualizar Usuario</x-wire-button>
+              <x-input
+         
+            label="Confirmar Contraseña" name="password_confirmation" type="password" placeholder="Confirmar nueva contraseña">
+
+          </x-input>
+
+          <div class="mb-5 mt-4 ">
+            <label for="role" class=" w-50% block text-sm font-medium text-gray-700 dark:text-gray-300">Rol</label>
+            <select name="role" id="role" class="mt-1 block w-*50% border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm">
+              <option value="">Seleccionar rol</option>
+              @foreach($roles as $role)
+                <option value="{{ $role->id }}" {{ (old('role') ?? $user->roles->first()?->id) == $role->id ? 'selected' : '' }}>{{ $role->name }}</option>
+              @endforeach
+            </select>
+          </div>
+
+            <div class="flex justify-end mt-4">
+
+              <x-wire-button type='submit' black>Actualizar</x-wire-button>
+
             </div>
+          </div>
         </form>
+
     </x-wire-card>
+
 </x-admin-layout>

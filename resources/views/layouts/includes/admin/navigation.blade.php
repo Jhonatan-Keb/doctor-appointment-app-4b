@@ -10,8 +10,8 @@
                     </svg>
                 </button>
                 <a href="/" class="flex ms-2 md:me-24">
-                    <img src="{{ asset('images/app-logo.png') }}" class="h-8 me-3" alt="Dendro Medical" />
-                    <span class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white">Dendro Medical</span>
+                    <img src="{{ asset('logo3.png') }}" class="h-9 me-3" alt="FlowBite Logo" />
+                    <span class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white"> MEDICAL</span>
                 </a>
             </div>
 

@@ -8,106 +8,123 @@ use Spatie\Permission\Models\Role;
 
 class RoleController extends Controller
 {
-    /** IDs protegidos: 1..4 */
-    protected function isProtected(Role $role): bool
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
     {
-        return (int) $role->id <= 4;
+        return view('admin.roles.index');  //
     }
 
-    public function index() { return view('admin.roles.index'); }
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        return view('admin.roles.create');
+    }
 
-    public function create() { return view('admin.roles.create'); }
-
+    /**
+     * Store a newly created resource in storage.
+     */
     public function store(Request $request)
     {
-        $data = $request->validate([
+        $request->validate([
             'name' => 'required|string|max:255|unique:roles,name',
         ]);
 
-        Role::create(['name' => $data['name'], 'guard_name' => 'web']);
+        Role::create([
+            'name' => $request->name,
+            'guard_name' => 'web',
+        ]);
 
         session()->flash('swal', [
             'icon'  => 'success',
-            'title' => 'Rol creado',
-            'text'  => 'El rol se creó correctamente.',
+            'title' => 'Role Created Successfully',
+            'text'  => 'El rol ha sido creado correctamente.',
         ]);
 
+        // Opcional: si ya usas swal, puedes quitar este with si no lo necesitas
         return redirect()->route('admin.roles.index');
     }
 
+    /**
+     * Display the specified resource.
+     */
+    public function show(string $id)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
     public function edit(string $id)
     {
         $role = Role::findOrFail($id);
-
-        if ($this->isProtected($role)) {
-            session()->flash('swal', [
-                'icon'  => 'error',
-                'title' => 'Acción no permitida',
-                'text'  => 'Este rol no puede modificarse.',
-            ]);
-            return redirect()->route('admin.roles.index');
-        }
-
         return view('admin.roles.edit', compact('role'));
     }
 
+    /**
+     * Update the specified resource in storage.
+     */
     public function update(Request $request, string $id)
     {
-        $role = Role::findOrFail($id);
-
-        if ($this->isProtected($role)) {
-            session()->flash('swal', [
-                'icon'  => 'error',
-                'title' => 'Acción no permitida',
-                'text'  => 'Este rol no puede modificarse.',
-            ]);
-            return redirect()->route('admin.roles.index');
-        }
-
         $request->validate([
-            'name' => 'required|string|max:255|unique:roles,name,' . $role->id,
+            'name' => 'required|string|max:255|unique:roles,name,' . $id,
         ]);
 
+        $role = Role::findOrFail($id);
+
+        // Si el nombre es el mismo, no actualizamos y mostramos info
         if ($role->name === $request->name) {
             session()->flash('swal', [
                 'icon'  => 'info',
                 'title' => 'Sin cambios',
-                'text'  => 'No se detectaron modificaciones.',
+                'text'  => 'No se detectaron modificaciones en el rol.',
             ]);
-            return redirect()->route('admin.roles.edit', $role);
+
+            return redirect()->route('admin.roles.index');
         }
 
-        $role->update(['name' => $request->name]);
+        // Actualizamos nombre
+        $role->update([
+            'name' => $request->name,
+        ]);
 
         session()->flash('swal', [
             'icon'  => 'success',
-            'title' => 'Rol actualizado',
-            'text'  => 'El rol se actualizó correctamente.',
+            'title' => 'Role actualizado',
+            'text'  => 'El rol ha sido actualizado correctamente.',
         ]);
 
         return redirect()->route('admin.roles.index');
     }
 
+    /**
+     * Remove the specified resource from storage.
+     */
     public function destroy(string $id)
     {
+        // ✅ Definimos el rol antes de usarlo
         $role = Role::findOrFail($id);
 
-        if ($this->isProtected($role)) {
+        if ($role->id <= 4) {
             session()->flash('swal', [
                 'icon'  => 'error',
-                'title' => 'Acción no permitida',
-                'text'  => 'Este rol no se puede eliminar.',
+                'title' => 'error',
+                'text'  => 'No se puede eliminar este rol.',
             ]);
+
             return redirect()->route('admin.roles.index');
         }
 
-        $name = $role->name;
         $role->delete();
 
         session()->flash('swal', [
             'icon'  => 'success',
-            'title' => 'Rol eliminado',
-            'text'  => "«{$name}» se eliminó correctamente.",
+            'title' => 'Role eliminado',
+            'text'  => 'El rol ha sido eliminado correctamente.',
         ]);
 
         return redirect()->route('admin.roles.index');

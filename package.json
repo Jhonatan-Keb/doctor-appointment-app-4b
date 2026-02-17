@@ -19,7 +19,6 @@
         "vite": "^7.0.4"
     },
     "dependencies": {
-        "flowbite": "^3.1.2",
-        "sweetalert2": "^11.26.3"
+        "flowbite": "^3.1.2"
     }
 }

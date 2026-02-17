@@ -7,6 +7,6 @@
     'name' => 'Profile',
     ],
 ]">
-    Hola
+ ola master
 
 </x-admin-layout>

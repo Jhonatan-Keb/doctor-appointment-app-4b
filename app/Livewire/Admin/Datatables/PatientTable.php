@@ -9,13 +9,13 @@ use Illuminate\Database\Eloquent\Builder;
 
 class PatientTable extends DataTableComponent
 {
-    // protected $model = Patient::class;
 
-    //Este metodo define el modelo
     public function builder(): Builder
     {
-        return Patient::query()->with('user');
+        return Patient::query()->with(['user', 'bloodType']);
     }
+
+    protected $model = Patient::class;
 
     public function configure(): void
     {
@@ -26,21 +26,24 @@ class PatientTable extends DataTableComponent
     {
         return [
             Column::make("Id", "id")
-                ->sortable(),
+                ->sortable()
+                ->searchable(),
             Column::make("Nombre", "user.name")
                 ->sortable()
                 ->searchable(),
             Column::make("Email", "user.email")
                 ->sortable()
                 ->searchable(),
-            Column::make("Numero de id", "user.id_number")
-                ->sortable(),
-            Column::make("Telefono", "user.phone")
+            Column::make("Teléfono", "user.phone")
+                ->sortable()
+                ->searchable(),
+
+            Column::make("Tipo Sangre", "bloodType.name")
                 ->sortable(),
             Column::make("Acciones")
-                ->label(function($row) {
+                ->label(function($row){
                     return view('admin.patients.actions',
-                    ['patient' => $row]);
+                        ['patient' => $row]);
                 }),
         ];
     }

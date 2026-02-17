@@ -1,5 +1,5 @@
 <x-admin-layout
-    title="Roles | Dendro Medical"
+    title="Roles | Medify"
     :breadcrumbs="[
         [
             'name' => 'Dashboard',
@@ -10,6 +10,7 @@
         ],
     ]"
 >
+
     <x-slot name="action">
         <x-wire-button blue href="{{ route('admin.roles.create') }}">
             <i class="fa-solid fa-plus"></i>
@@ -18,6 +19,5 @@
     </x-slot>
 
     @livewire('admin.data-tables.role-table')
-
 
 </x-admin-layout>
