@@ -7,21 +7,59 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
-Configuración inicial del proyecto
+## About Laravel
 
-Para iniciar el desarrollo se realizaron las configuraciones básicas en el proyecto de Laravel, garantizando que la aplicación esté adaptada al idioma español y a la zona horaria correcta. Además, se integró la base de datos MySQL y se añadió una personalización visual mínima que servirá como base de futuros avances.
+Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
 
-En primer lugar, se verificó que el proyecto estuviera correctamente instalado y funcionando. Se comprobó la versión de PHP, Composer y Laravel, y se ejecutó php artisan serve para confirmar que la aplicación cargara sin problemas.
+- [Simple, fast routing engine](https://laravel.com/docs/routing).
+- [Powerful dependency injection container](https://laravel.com/docs/container).
+- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
+- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
+- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
+- [Robust background job processing](https://laravel.com/docs/queues).
+- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
 
-Posteriormente, se configuró el idioma en español. Para ello se modificó el archivo .env, estableciendo las variables APP_LOCALE=es y APP_FALLBACK_LOCALE=es. De igual manera, en config/app.php se ajustaron las claves 'locale' y 'fallback_locale' para que utilicen los valores en español. Esto asegura que todos los mensajes y validaciones por defecto se muestren en dicho idioma.
-Como complemento, se creó la carpeta lang/es copiando el contenido de lang/en y traduciendo los archivos principales como auth.php, pagination.php, passwords.php y validation.php. De esta manera, los mensajes del sistema, paginación, validaciones y textos de autenticación se presentan completamente en español sin depender del fallback al inglés.
+Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
-A continuación, se ajustó la zona horaria del proyecto. En el archivo config/app.php se cambió la clave 'timezone' a America/Merida, de modo que las fechas y horas que genere la aplicación se sincronicen correctamente con la ubicación geográfica de trabajo. Esta configuración se validó ejecutando php artisan tinker y revisando que config('app.timezone') devolviera el valor esperado.
+## Learning Laravel
 
-En cuanto a la integración de MySQL, se configuró el archivo .env con los datos de conexión a la base de datos: DB_CONNECTION=mysql, DB_HOST=127.0.0.1, DB_PORT=3306, DB_DATABASE=appointment_db, DB_USERNAME=laravel y DB_PASSWORD=laravel123. Posteriormente se ejecutó php artisan migrate para crear las tablas predeterminadas en la base de datos, confirmando que la aplicación interactúa de manera correcta con MySQL.
+Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
 
-Finalmente, se realizó una personalización visual básica para dar identidad al proyecto. Se agregó una imagen de perfil (foto del Tec de Software) en la carpeta public/images y se editó la vista principal resources/views/welcome.blade.php. Con esto se comprobó que Laravel sirve contenido estático y que la personalización puede evolucionar conforme avance el desarrollo.
+You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
 
-Pasos Siguientes
+If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
 
-Se incorporó un nuevo layout de administración que aprovecha la biblioteca Flowbite para mejorar la interfaz dividienlos en archivos para ser incluidos en la etiqueta del mismo nombre en admin.blade.php. Se instalaron los paquetes necesarios con npm, se configuró el archivo tailwind.config.js para incluir los componentes de Flowbite en app css y se importaron sus scripts en la compilación de Vite. Con esta base se creó un componente Blade principal que define la estructura del panel de administración, integrando una barra lateral (sidebar), una barra de navegación (navbar) y secciones dinámicas mediante slots e includes. Esta implementación permite que las vistas del dashboard y demás módulos se incrusten de forma flexible, asegurando una experiencia visual consistente y manteniendo el código organizado y escalable junto con un menu dropdown con nuestro perfil y linkeandolo con nuestra plantilla editada. Finalmente se le anexo un logotipo para el tipo de app a ser creado.
+## Laravel Sponsors
+
+We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+
+### Premium Partners
+
+- **[Vehikl](https://vehikl.com)**
+- **[Tighten Co.](https://tighten.co)**
+- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
+- **[64 Robots](https://64robots.com)**
+- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
+- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
+- **[Redberry](https://redberry.international/laravel-development)**
+- **[Active Logic](https://activelogic.com)**
+
+## Contributing
+
+Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+
+## Code of Conduct
+
+In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+
+## Security Vulnerabilities
+
+If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+
+## License
+
+The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+
+
+Para el nuevo layout, se separo en partes y se instalo flowbite, se cambio el logo, y se integro la edicion de perfil dentro del screen, mentiendolo dentro del admin

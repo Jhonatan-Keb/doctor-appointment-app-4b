@@ -11,14 +11,15 @@ return Application::configure(basePath: dirname(__DIR__))
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
-        //añadr nueva ruta
-        then: function() {
+        //Añadiendo una nueva ruta
+        then: function () {
             Route::middleware('web', 'auth')
                 ->prefix('admin')
                 ->name('admin.')
                 ->group(base_path('routes/admin.php'));
         }
     )
+
     ->withMiddleware(function (Middleware $middleware): void {
         //
     })

@@ -13,18 +13,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        //Llamar a RoleSeeder
+        // User::factory(10)->create();
         $this->call([
             RoleSeeder::class,
-            // Seed de tipos de sangre
-            BloodTypeSeeder::class,
             UserSeeder::class,
-            // Seed de pacientes
-            PatientSeeder::class,
         ]);
-
-        //Crear un usuario de prueba cada que se ejecuten migraciones
-        //php artisan migrate:fresh -seed
-       
+        
     }
 }

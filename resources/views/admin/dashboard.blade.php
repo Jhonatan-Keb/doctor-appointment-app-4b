@@ -7,6 +7,6 @@
     'name' => 'Profile',
     ],
 ]">
- ola master
+    Rei Chiquita
 
 </x-admin-layout>
