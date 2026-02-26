@@ -1,64 +1,74 @@
-<x-admin-layout title="Usuarios | Simify" :breadcrumbs="[
+<x-admin-layout
+    title="Usuarios | Dendro Medical"
+    :breadcrumbs="[
         [
-          'name' => 'Dashboard', 
-          'href' => route('admin.dashboard')
+            'name' => 'Dashboard',
+            'href' => route('admin.dashboard'),
         ],
         [
-          'name' => 'Usuarios',
-          'href' => route('admin.users.index')
+            'name' => 'Usuarios',
+            'href' => route('admin.admin.users.index'),
         ],
         [
-          'name' => 'Nuevo'
+            'name' =>'Nuevo',
         ],
     ]">
-        
-        <x-card>
-            <form action="{{ route('admin.users.store') }}" method="POST">
-                @csrf
-                
-                <div class="mb-4">
-                    <x-input label="Nombre" name="name" placeholder="Ingrese el nombre del usuario" value="{{ old('name') }}" />
+    <x-wire-card>
+        <form action="{{ route('admin.admin.users.store') }}" method="post">
+            @csrf
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                {{-- Se eliminó 'required' --}}
+                <x-wire-input name="name" label="Nombre" :value="old('name')"
+                              placeholder="Nombre" autocomplete="name"/>
+
+                {{-- Se eliminó 'required' --}}
+                <x-wire-input name="email" label="Email" :value="old('email')"
+                              placeholder="usuario@email.com" autocomplete="email" inputmode="email"/>
+
+                {{-- Se eliminó 'required' --}}
+                <x-wire-input name="password" label="Contraseña" type="password"
+                              placeholder="Mínimo 8 caracteres" autocomplete="new-password"/>
+
+                {{-- Se eliminó 'required' --}}
+                <x-wire-input name="password_confirmation" label="Confirmar contraseña" type="password"
+                              placeholder="Repita la contraseña" autocomplete="new-password"/>
+
+                <x-wire-input name="id_number" label="Número de ID" :value="old('id_number')"
+                              placeholder="Ej. 123456789"/>
+
+                <x-wire-input name="phone" label="Teléfono" :value="old('phone')"
+                              placeholder="Ej. 123456789" inputmode="tel"/>
+
+                <div class="col-span-1 md:col-span-2">
+                    <x-wire-input name="address" label="Dirección" :value="old('address')"
+                                  placeholder="Ej. Calle 123"/>
                 </div>
 
-                <div class="mb-4">
-                    <x-input label="Email" name="email" type="email" placeholder="Ingrese el email del usuario" value="{{ old('email') }}" />
+                <div class="col-span-1 md:col-span-2 space-y-1">
+                    {{-- Se eliminó 'required' --}}
+                    <x-wire-native-select name="role_id" label="Rol">
+                        <option value="">Seleccione un rol</option>
+
+                        @foreach ($roles as $role)
+                            <option value="{{ $role->id }}" @selected(old('role_id') == $role->id)>
+                                {{ $role->name }}
+                            </option>
+                        @endforeach
+                    </x-wire-native-select>
+
+                    <p class="text-sm text-gray-500">
+                        Define los permisos y accesos del usuario
+                    </p>
                 </div>
 
-                <div class="mb-4">
-                    <x-input label="Contraseña" name="password" type="password" placeholder="Ingrese la contraseña" />
-                </div>
+            </div>
 
-                <div class="mb-4">
-                    <x-input label="Confirmar Contraseña" name="password_confirmation" type="password" placeholder="Confirme la contraseña" />
-                </div>
+            <div class="flex justify-end mt-6">
+                <x-wire-button type="submit" label="Guardar" primary />
+            </div>
 
-                <div class="mb-4">
-                    <x-input label="Número de Identificación" name="id_number" placeholder="Ingrese el número de identificación" value="{{ old('id_number') }}" />
-                </div>
-
-                <div class="mb-4">
-                    <x-input label="Teléfono" name="phone" placeholder="Ingrese el teléfono" value="{{ old('phone') }}" />
-                </div>
-
-                <div class="mb-4">
-                    <x-input label="Dirección" name="address" placeholder="Ingrese la dirección" value="{{ old('address') }}" />
-                </div>
-
-                <div class="mb-4">
-                    <x-select 
-                        label="Rol" 
-                        name="role_id" 
-                        placeholder="Seleccione un rol"
-                        :options="$roles"
-                        option-label="name"
-                        option-value="id"
-                    />
-                </div>
-
-                <div class="flex justify-end mt-4">
-                    <x-button type="submit" primary>Guardar</x-button>
-                </div>
-            </form>
-        </x-card>
-
+        </form>
+    </x-wire-card>
 </x-admin-layout>

@@ -1,31 +1,28 @@
 <?php
 
-namespace Tests\Feature;
-
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 
-class UserSelfDeleteTest extends TestCase
-{
-    //Usamos la cualiada para refrescar la base de datos entre test
-    use RefreshDatabase;
+//usar la fucion para refrescar BF
 
-    public function test_un_usuario_no_puede_eliminarse_a_si_mismo()
-    {
-        // Creamos un usuario de prueba
-        $user = User::factory()->create();
+uses(RefreshDatabase::class);
 
-        // Simulamos que el usuario está logeado
-        $this->actingAs($user);
+test('Un usuario no puede eliminarse a si mismo', function () {
+    //1) crear un usuario de prueba
+    $user = User::factory()->create();
 
-        //Simular una petición DELETE a la ruta de eliminación del usuario
-        $response = $this->delete(route('admin.users.destroy', $user));
+    //2) simular que ese usuario ya inicio secion
+    $this->actingAs($user, 'web');
 
-        //Esperamos que el servidor responda con un código 403 (Prohibido)
-        $response->assertStatus(403);
+    //3) simular una peticion HTTP DELETE (borrar un usuario)
+    $response = $this->delete(route('admin.admin.users.destroy', $user));
 
-        //Verificamos que el usuario aún existe en la base de datos
-        $this->assertDatabaseHas('users', ['id' => $user->id]);
-    }
-}
+    //4) esperar que el servidor bloquee el borrado a si mismo
+    $response->assertStatus(403);
+
+    //5) verificar en la base de datos que sigue existiendo
+    $this->assertDatabaseHas('users', [
+        'id' => $user->id,
+    ]);
+
+});

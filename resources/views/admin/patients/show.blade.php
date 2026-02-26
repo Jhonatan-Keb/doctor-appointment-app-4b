@@ -1,16 +1,18 @@
-<x-admin-layout title="Roles | Simify" :breadcrumbs="[
+<x-admin-layout
+    title="Pacientes | Dendro Medical"
+    :breadcrumbs="[
         [
-          'name' => 'Dashboard', 
-          'href' => route('admin.dashboard')
+            'name' => 'Dashboard',
+            'href' => route ('admin.dashboard'),
+        ],
+
+        [
+            'name' => 'Pacientes',
+            'href' => route('admin.admin.patients.index')
         ],
         [
-          'name' => 'Pacientes',
-          'href' => route('admin.patients.index'),
-        ],
-        [
-          'name' => 'Detalle',
+            'name' => 'Detalle'
         ]
-        ],
     ]">
 
 </x-admin-layout>

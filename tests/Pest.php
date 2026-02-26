@@ -13,6 +13,9 @@
 
 pest()->extend(Tests\TestCase::class)
     ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
+    ->beforeEach(function () {
+        error_reporting(E_ALL & ~E_DEPRECATED);
+    })
     ->in('Feature');
 
 /*

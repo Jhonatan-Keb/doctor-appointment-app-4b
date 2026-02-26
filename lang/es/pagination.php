@@ -1,8 +1,1 @@
-<?php
-
-declare(strict_types=1);
-
-return [
-    'next'     => 'Siguiente &raquo;',
-    'previous' => '&laquo; Anterior',
-];
+404: Not Found

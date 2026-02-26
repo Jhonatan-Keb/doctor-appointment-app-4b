@@ -9,8 +9,8 @@
                     </svg>
                 </button>
                 <a href="/" class="flex ms-2 md:me-24">
-                <img src="images/healthy.png" class="h-8 me-3" alt="App Logo" />
-                <span class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white">Healthify</span>
+                <img src="images/logo.png" class="h-8 me-3" alt="App Logo" />
+                <span class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white">Dendro Medical</span>
                 </a>
             </div>
             <div class="flex items-center">

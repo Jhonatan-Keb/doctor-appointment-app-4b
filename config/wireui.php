@@ -18,7 +18,7 @@ return [
     |
      */
 
-    'prefix' => null,
+    'prefix' => 'wire-',
 
     /*
     |--------------------------------------------------------------------------
@@ -114,5 +114,13 @@ return [
     |
      */
 
-    'components' => Config::defaultComponents(),
+    'components' => Config::defaultComponents([
+        // 'button' => [
+        //     'alias' => 'new-button',
+        // ],
+        // 'mini-button' => [
+        //     'class' => Components\Button\Mini::class,
+        //     'alias' => 'new-mini-button',
+        // ],
+    ]),
 ];

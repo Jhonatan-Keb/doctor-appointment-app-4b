@@ -1,6 +1,7 @@
 <?php
 
 namespace Database\Seeders;
+
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -12,13 +13,16 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-      User::factory()->create([
-            'name' => 'Luis Berdugo',
-            'email' => 'luism.berdugo@outlook.com',
-            'password'=> bcrypt('12345678'),
+        //
+        $doctor = User::factory()->create([
+            'name' => 'Hoshiko Kuro',
+            'email' => 'hoshiko@dendro.com',
+            'password' => bcrypt('12345678'),
             'id_number' => '12345678',
-            'phone' => '12345678',
-            'address' => 'calle skibidi',
-        ])->assignRole('Doctor');  //
+            'phone' => '1234567899',
+            'address' => 'Tokyo, Japan',
+        ]);
+        $doctor->assignRole('Doctor');
+        $doctor->doctor()->create();
     }
 }

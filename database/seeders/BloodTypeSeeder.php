@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\BloodType;
 
 class BloodTypeSeeder extends Seeder
 {
@@ -23,11 +22,9 @@ class BloodTypeSeeder extends Seeder
             'O+',
             'O-',
         ];
-        
+
         foreach ($bloodTypes as $bloodType) {
-            BloodType::firstOrCreate([
-                'name' => $bloodType
-            ]);
+            \App\Models\BloodType::firstOrCreate(['name' => $bloodType]);
         }
     }
 }
