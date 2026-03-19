@@ -22,4 +22,16 @@ class Doctor extends Model
     {
         return $this->belongsTo(Speciality::class);
     }
+
+    // Un doctor tiene muchas citas
+    public function appointments()
+    {
+        return $this->hasMany(Appointment::class);
+    }
+
+    // Un doctor tiene muchos horarios
+    public function schedules()
+    {
+        return $this->hasMany(DoctorSchedule::class);
+    }
 }
