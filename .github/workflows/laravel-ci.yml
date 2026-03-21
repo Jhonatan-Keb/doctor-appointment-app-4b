@@ -11,6 +11,7 @@ jobs:
       uses: shivammathur/setup-php@v2
       with:
         php-version: '8.2'
+        extensions: pdo_sqlite, sqlite3
     - name: Install Dependencies
       run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
     - name: Copy .env
@@ -20,8 +21,12 @@ jobs:
     - name: Configure SQLite for testing
       run: |
         touch database/database.sqlite
-        echo "DB_CONNECTION=sqlite" >> .env
-        echo "DB_DATABASE=$(pwd)/database/database.sqlite" >> .env
+        sed -i 's/DB_CONNECTION=.*/DB_CONNECTION=sqlite/' .env
+        sed -i 's/^DB_HOST=.*$/# DB_HOST=/' .env
+        sed -i 's/^DB_PORT=.*$/# DB_PORT=/' .env
+        sed -i 's/^DB_DATABASE=.*$/DB_DATABASE=\/home\/runner\/work\/doctor-appointment-app-4b\/doctor-appointment-app-4b\/database\/database.sqlite/' .env
+        sed -i 's/^DB_USERNAME=.*$/# DB_USERNAME=/' .env
+        sed -i 's/^DB_PASSWORD=.*$/# DB_PASSWORD=/' .env
     - name: Run migrations
       run: php artisan migrate --force
     - name: Execute tests
