@@ -29,7 +29,7 @@ class AuthenticatedUserCanUpdateUserTest extends TestCase
         ]);
 
         // Actualizar el usuario
-        $response = $this->actingAs($admin)->put(route('admin.users.update', $userToUpdate), [
+        $response = $this->actingAs($admin)->put(route('admin.admin.users.update', $userToUpdate), [
             'name' => 'Updated Name',
             'email' => 'updated@example.com',
             'password' => 'newpassword123',

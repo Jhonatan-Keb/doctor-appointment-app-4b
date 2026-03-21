@@ -19,7 +19,7 @@ class UserUpdateFailsWithInvalidDataTest extends TestCase
         $userToUpdate = User::factory()->create();
 
         // Intentar actualizar con email inválido
-        $response = $this->actingAs($admin)->put(route('admin.users.update', $userToUpdate), [
+        $response = $this->actingAs($admin)->put(route('admin.admin.users.update', $userToUpdate), [
             'name' => 'Valid Name',
             'email' => 'invalid-email',
             'password' => 'password123',
@@ -43,7 +43,7 @@ class UserUpdateFailsWithInvalidDataTest extends TestCase
         $userToUpdate = User::factory()->create();
 
         // Intentar actualizar con nombre muy corto
-        $response = $this->actingAs($admin)->put(route('admin.users.update', $userToUpdate), [
+        $response = $this->actingAs($admin)->put(route('admin.admin.users.update', $userToUpdate), [
             'name' => 'AB',
             'email' => 'valid@example.com',
             'password' => 'password123',

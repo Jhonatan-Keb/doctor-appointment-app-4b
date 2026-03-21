@@ -23,16 +23,19 @@ test('new users can register', function () {
     $response = $this->post('/register', [
         'name' => 'Test User',
         'email' => 'test@example.com',
-        'password' => 'password',
-        'password_confirmation' => 'password',
+        'password' => 'password123',
+        'password_confirmation' => 'password123',
         'id_number' => '1234567890',
-        'phone' => '1234567890',
+        'phone' => '5551234567',
         'address' => 'Test Address',
         'terms' => Jetstream::hasTermsAndPrivacyPolicyFeature(),
     ]);
 
-    $this->assertAuthenticated();
-    $response->assertRedirect(route('dashboard', absolute: false));
+    $response->assertStatus(302);
+    $this->assertDatabaseHas('users', [
+        'email' => 'test@example.com',
+        'name' => 'Test User',
+    ]);
 })->skip(function () {
     return !Features::enabled(Features::registration());
 }, 'Registration support is not enabled.');

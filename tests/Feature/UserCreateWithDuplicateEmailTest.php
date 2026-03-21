@@ -18,7 +18,7 @@ class UserCreateWithDuplicateEmailTest extends TestCase
         ]);
 
         // Intentar crear otro usuario con el mismo email
-        $response = $this->actingAs($existingUser)->post(route('admin.users.store'), [
+        $response = $this->actingAs($existingUser)->post(route('admin.admin.users.store'), [
             'name' => 'New User',
             'email' => 'existing@example.com',
             'password' => 'password123',
