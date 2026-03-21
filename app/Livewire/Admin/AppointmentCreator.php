@@ -2,40 +2,33 @@
 
 namespace App\Livewire\Admin;
 
+use App\Mail\AppointmentConfirmation;
+use App\Mail\DailyAppointmentReport;
 use App\Models\Appointment;
 use App\Models\Doctor;
 use App\Models\DoctorSchedule;
 use App\Models\Patient;
 use App\Models\Speciality;
+use App\Models\User;
+use Illuminate\Support\Facades\Mail;
 use Livewire\Component;
 use Carbon\Carbon;
 
 class AppointmentCreator extends Component
 {
-    // Search filters
     public $searchDate = '';
     public $searchTime = '';
     public $searchSpeciality = '';
-
-    // Available time options (from doctor_schedules)
     public $timeOptions = [];
-
-    // Search results
     public $availableDoctors = [];
     public $hasSearched = false;
-
-    // Selected appointment
     public $selectedDoctorId = null;
     public $selectedDoctorName = '';
     public $selectedSlotStart = '';
     public $selectedSlotEnd = '';
     public $selectedDate = '';
-
-    // Booking form
     public $patientId = '';
     public $reason = '';
-
-    // Data for dropdowns
     public $specialities = [];
     public $patients = [];
 
@@ -47,9 +40,6 @@ class AppointmentCreator extends Component
         $this->loadTimeOptions();
     }
 
-    /**
-     * Load unique time options from doctor_schedules for the dropdown
-     */
     private function loadTimeOptions()
     {
         $this->timeOptions = DoctorSchedule::select('start_time', 'end_time')
@@ -69,9 +59,6 @@ class AppointmentCreator extends Component
             ->toArray();
     }
 
-    /**
-     * Search for available doctors based on filters
-     */
     public function searchAvailability()
     {
         $this->validate([
@@ -82,33 +69,27 @@ class AppointmentCreator extends Component
         ]);
 
         $date = Carbon::parse($this->searchDate);
-        $dayOfWeek = $date->dayOfWeekIso; // 1=Monday...5=Friday
+        $dayOfWeek = $date->dayOfWeekIso;
 
-        // Build query for doctors with schedules on this day
         $query = Doctor::with([
             'user',
             'speciality',
             'schedules' => function ($q) use ($dayOfWeek) {
                 $q->where('day_of_week', $dayOfWeek)->orderBy('start_time');
             }
-        ])
-            ->whereHas('schedules', function ($q) use ($dayOfWeek) {
-                $q->where('day_of_week', $dayOfWeek);
+        ])->whereHas('schedules', function ($q) use ($dayOfWeek) {
+            $q->where('day_of_week', $dayOfWeek);
+            if (!empty($this->searchTime)) {
+                $q->where('start_time', $this->searchTime);
+            }
+        });
 
-                // If specific time selected, filter by that time
-                if (!empty($this->searchTime)) {
-                    $q->where('start_time', $this->searchTime);
-                }
-            });
-
-        // Filter by speciality if selected
         if (!empty($this->searchSpeciality)) {
             $query->where('speciality_id', $this->searchSpeciality);
         }
 
         $doctors = $query->get();
 
-        // Get existing appointments for this date to filter out booked slots
         $existingAppointments = Appointment::where('date', $this->searchDate)
             ->whereIn('status', [Appointment::STATUS_SCHEDULED, Appointment::STATUS_COMPLETED])
             ->get()
@@ -136,23 +117,20 @@ class AppointmentCreator extends Component
                 'id' => $doctor->id,
                 'name' => $doctor->user->name,
                 'speciality' => $doctor->speciality->name ?? 'Sin especialidad',
-                'initials' => collect(explode(' ', $doctor->user->name))->map(fn($w) => strtoupper(mb_substr($w, 0, 1)))->take(2)->implode(''),
+                'initials' => collect(explode(' ', $doctor->user->name))
+                    ->map(fn($w) => strtoupper(mb_substr($w, 0, 1)))
+                    ->take(2)->implode(''),
                 'slots' => $availableSlots,
             ];
         })->filter(fn($d) => count($d['slots']) > 0)->values()->toArray();
 
         $this->hasSearched = true;
-
-        // Reset selection
         $this->selectedDoctorId = null;
         $this->selectedDoctorName = '';
         $this->selectedSlotStart = '';
         $this->selectedSlotEnd = '';
     }
 
-    /**
-     * Select a time slot for a doctor
-     */
     public function selectSlot($doctorId, $slotStart, $slotEnd)
     {
         $this->selectedDoctorId = $doctorId;
@@ -160,7 +138,6 @@ class AppointmentCreator extends Component
         $this->selectedSlotEnd = $slotEnd;
         $this->selectedDate = $this->searchDate;
 
-        // Find doctor name
         foreach ($this->availableDoctors as $doctor) {
             if ($doctor['id'] == $doctorId) {
                 $this->selectedDoctorName = $doctor['name'];
@@ -169,9 +146,6 @@ class AppointmentCreator extends Component
         }
     }
 
-    /**
-     * Confirm and create the appointment
-     */
     public function confirmAppointment()
     {
         $this->validate([
@@ -190,7 +164,7 @@ class AppointmentCreator extends Component
         $start = Carbon::createFromFormat('H:i:s', $this->selectedSlotStart);
         $end = Carbon::createFromFormat('H:i:s', $this->selectedSlotEnd);
 
-        Appointment::create([
+        $appointment = Appointment::create([
             'patient_id' => $this->patientId,
             'doctor_id' => $this->selectedDoctorId,
             'date' => $this->selectedDate,
@@ -201,13 +175,50 @@ class AppointmentCreator extends Component
             'status' => Appointment::STATUS_SCHEDULED,
         ]);
 
+        $appointment->load(['patient.user', 'doctor.user', 'doctor.speciality']);
+
+        Mail::to($appointment->patient->user->email)
+            ->send(new AppointmentConfirmation($appointment));
+
+        Mail::to($appointment->doctor->user->email)
+            ->send(new AppointmentConfirmation($appointment));
+
         session()->flash('swal', [
             'icon' => 'success',
             'title' => '¡Cita creada!',
-            'text' => 'La cita médica se ha registrado correctamente.',
+            'text' => 'La cita médica se ha registrado y se enviaron los correos.',
         ]);
 
         return redirect()->route('admin.admin.appointments.index');
+    }
+
+    public function sendTestReport(): void
+    {
+        $appointments = Appointment::with(['patient.user', 'doctor.user', 'doctor.speciality'])
+            ->where('date', today()->toDateString())
+            ->where('status', Appointment::STATUS_SCHEDULED)
+            ->orderBy('start_time')
+            ->get();
+
+        if ($appointments->isEmpty()) {
+            session()->flash('report_msg', 'warning|No hay citas agendadas para hoy.');
+            return;
+        }
+
+        $admins = User::role('Administrador')->get();
+        foreach ($admins as $admin) {
+            Mail::to($admin->email)
+                ->send(new DailyAppointmentReport($appointments, $admin->name));
+        }
+
+        $byDoctor = $appointments->groupBy('doctor_id');
+        foreach ($byDoctor as $doctorAppointments) {
+            $doctor = $doctorAppointments->first()->doctor->user;
+            Mail::to($doctor->email)
+                ->send(new DailyAppointmentReport($doctorAppointments, $doctor->name));
+        }
+
+        session()->flash('report_msg', 'success|Reporte enviado a ' . $admins->count() . ' admin(s) y ' . $byDoctor->count() . ' doctor(es). Revisa Mailtrap.');
     }
 
     public function render()

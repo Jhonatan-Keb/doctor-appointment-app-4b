@@ -60,4 +60,11 @@ class Appointment extends Model
             default => 'gray',
         };
     }
+
+    public function getTimeAttribute(): string
+    {
+        return \Carbon\Carbon::parse($this->start_time)->format('H:i') .
+               ' – ' .
+               \Carbon\Carbon::parse($this->end_time)->format('H:i');
+    }
 }

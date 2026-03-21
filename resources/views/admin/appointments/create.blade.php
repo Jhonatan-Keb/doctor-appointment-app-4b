@@ -3,6 +3,5 @@
         ['name' => 'Citas', 'href' => route('admin.admin.appointments.index')],
         ['name' => 'Nuevo'],
     ]">
-
-    @livewire('admin.appointment-creator')
+    @livewire(\App\Livewire\Admin\AppointmentCreator::class)
 </x-admin-layout>

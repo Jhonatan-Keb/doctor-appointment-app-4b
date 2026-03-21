@@ -123,4 +123,6 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'daily_report_time' => env('DAILY_REPORT_TIME', '08:00'),
+
 ];
