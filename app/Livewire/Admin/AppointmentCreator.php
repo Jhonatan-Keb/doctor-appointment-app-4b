@@ -6,7 +6,6 @@ use App\Mail\AppointmentConfirmation;
 use App\Mail\DailyAppointmentReport;
 use App\Models\Appointment;
 use App\Models\Doctor;
-use App\Models\DoctorSchedule;
 use App\Models\Patient;
 use App\Models\Speciality;
 use App\Models\User;
@@ -32,6 +31,10 @@ class AppointmentCreator extends Component
     public $specialities = [];
     public $patients = [];
 
+    // Report feedback (component property, avoids Livewire session flash issues)
+    public $reportMsg = '';
+    public $reportMsgType = '';
+
     public function mount()
     {
         $this->searchDate = date('Y-m-d');
@@ -42,21 +45,18 @@ class AppointmentCreator extends Component
 
     private function loadTimeOptions()
     {
-        $this->timeOptions = DoctorSchedule::select('start_time', 'end_time')
-            ->distinct()
-            ->orderBy('start_time')
-            ->get()
-            ->map(function ($schedule) {
-                $start = Carbon::parse($schedule->start_time)->format('H:i:s');
-                $end = Carbon::parse($schedule->end_time)->format('H:i:s');
-                return [
-                    'value' => $start,
-                    'label' => $start . ' – ' . $end,
-                ];
-            })
-            ->unique('value')
-            ->values()
-            ->toArray();
+        // Generate all 24 hourly slots: 00:00–01:00, 01:00–02:00, ..., 23:00–00:00
+        $slots = [];
+        for ($hour = 0; $hour < 24; $hour++) {
+            $start = str_pad($hour, 2, '0', STR_PAD_LEFT) . ':00:00';
+            $endHour = ($hour + 1) % 24;
+            $end = str_pad($endHour, 2, '0', STR_PAD_LEFT) . ':00:00';
+            $slots[] = [
+                'value' => $start,
+                'label' => str_pad($hour, 2, '0', STR_PAD_LEFT) . ':00 – ' . str_pad($endHour, 2, '0', STR_PAD_LEFT) . ':00',
+            ];
+        }
+        $this->timeOptions = $slots;
     }
 
     public function searchAvailability()
@@ -68,34 +68,31 @@ class AppointmentCreator extends Component
             'searchDate.after_or_equal' => 'No se permiten fechas en el pasado.',
         ]);
 
-        $date = Carbon::parse($this->searchDate);
-        $dayOfWeek = $date->dayOfWeekIso;
-
-        $query = Doctor::with([
-            'user',
-            'speciality',
-            'schedules' => function ($q) use ($dayOfWeek) {
-                $q->where('day_of_week', $dayOfWeek)->orderBy('start_time');
-            }
-        ])->whereHas('schedules', function ($q) use ($dayOfWeek) {
-            $q->where('day_of_week', $dayOfWeek);
-            if (!empty($this->searchTime)) {
-                $q->where('start_time', $this->searchTime);
-            }
-        });
-
+        // Build doctor query (no DoctorSchedule restriction — show all doctors)
+        $query = Doctor::with(['user', 'speciality']);
         if (!empty($this->searchSpeciality)) {
             $query->where('speciality_id', $this->searchSpeciality);
         }
-
         $doctors = $query->get();
 
+        // Get all booked slots for this date grouped by doctor
         $existingAppointments = Appointment::where('date', $this->searchDate)
             ->whereIn('status', [Appointment::STATUS_SCHEDULED, Appointment::STATUS_COMPLETED])
             ->get()
             ->groupBy('doctor_id');
 
-        $this->availableDoctors = $doctors->map(function ($doctor) use ($existingAppointments) {
+        // All 24 hourly slots
+        $allSlots = [];
+        for ($hour = 0; $hour < 24; $hour++) {
+            $endHour = ($hour + 1) % 24;
+            $allSlots[] = [
+                'start' => str_pad($hour, 2, '0', STR_PAD_LEFT) . ':00:00',
+                'end'   => str_pad($endHour, 2, '0', STR_PAD_LEFT) . ':00:00',
+            ];
+        }
+
+        $this->availableDoctors = $doctors->map(function ($doctor) use ($existingAppointments, $allSlots) {
+            // Collect already-booked start times for this doctor
             $bookedSlots = [];
             if (isset($existingAppointments[$doctor->id])) {
                 foreach ($existingAppointments[$doctor->id] as $appt) {
@@ -103,26 +100,28 @@ class AppointmentCreator extends Component
                 }
             }
 
-            $availableSlots = $doctor->schedules->filter(function ($schedule) use ($bookedSlots) {
-                $startTime = Carbon::parse($schedule->start_time)->format('H:i:s');
-                return !in_array($startTime, $bookedSlots);
-            })->map(function ($schedule) {
-                return [
-                    'start' => Carbon::parse($schedule->start_time)->format('H:i:s'),
-                    'end' => Carbon::parse($schedule->end_time)->format('H:i:s'),
-                ];
-            })->values()->toArray();
+            // If a time filter is active, restrict to that slot only
+            $slotsToCheck = $allSlots;
+            if (!empty($this->searchTime)) {
+                $slotsToCheck = array_values(array_filter($allSlots, fn($s) => $s['start'] === $this->searchTime));
+            }
+
+            $availableSlots = array_values(array_filter($slotsToCheck, fn($s) => !in_array($s['start'], $bookedSlots)));
+
+            if (empty($availableSlots)) {
+                return null;
+            }
 
             return [
-                'id' => $doctor->id,
-                'name' => $doctor->user->name,
+                'id'         => $doctor->id,
+                'name'       => $doctor->user->name,
                 'speciality' => $doctor->speciality->name ?? 'Sin especialidad',
-                'initials' => collect(explode(' ', $doctor->user->name))
+                'initials'   => collect(explode(' ', $doctor->user->name))
                     ->map(fn($w) => strtoupper(mb_substr($w, 0, 1)))
                     ->take(2)->implode(''),
                 'slots' => $availableSlots,
             ];
-        })->filter(fn($d) => count($d['slots']) > 0)->values()->toArray();
+        })->filter()->values()->toArray();
 
         $this->hasSearched = true;
         $this->selectedDoctorId = null;
@@ -161,8 +160,17 @@ class AppointmentCreator extends Component
             'selectedDoctorId.required' => 'Debe seleccionar un doctor y horario.',
         ]);
 
-        $start = Carbon::createFromFormat('H:i:s', $this->selectedSlotStart);
-        $end = Carbon::createFromFormat('H:i:s', $this->selectedSlotEnd);
+        // Prevent double-booking: same doctor, date and start time
+        $conflict = Appointment::where('doctor_id', $this->selectedDoctorId)
+            ->where('date', $this->selectedDate)
+            ->where('start_time', $this->selectedSlotStart)
+            ->whereIn('status', [Appointment::STATUS_SCHEDULED, Appointment::STATUS_COMPLETED])
+            ->exists();
+
+        if ($conflict) {
+            $this->addError('selectedSlotStart', 'Este horario ya fue reservado. Por favor selecciona otro.');
+            return;
+        }
 
         $appointment = Appointment::create([
             'patient_id' => $this->patientId,
@@ -170,23 +178,47 @@ class AppointmentCreator extends Component
             'date' => $this->selectedDate,
             'start_time' => $this->selectedSlotStart,
             'end_time' => $this->selectedSlotEnd,
-            'duration' => $start->diffInMinutes($end),
+            'duration' => 60, // all slots are 1-hour blocks
             'reason' => $this->reason,
             'status' => Appointment::STATUS_SCHEDULED,
         ]);
 
         $appointment->load(['patient.user', 'doctor.user', 'doctor.speciality']);
 
-        Mail::to($appointment->patient->user->email)
-            ->send(new AppointmentConfirmation($appointment));
+        $errors = [];
 
-        Mail::to($appointment->doctor->user->email)
-            ->send(new AppointmentConfirmation($appointment));
+        // 1) Mailtrap sandbox: paciente (To) + doctor (CC) en una sola transacción
+        try {
+            Mail::to($appointment->patient->user->email)
+                ->cc($appointment->doctor->user->email)
+                ->send(new AppointmentConfirmation($appointment));
+        } catch (\Throwable $e) {
+            \Log::warning('Confirmación de cita (Mailtrap) falló: ' . $e->getMessage());
+            $errors[] = 'Mailtrap';
+        }
+
+        // 2) Gmail real: envía copia al correo real configurado en ADMIN_REAL_EMAIL
+        $realEmail = config('mail.admin_real_email');
+        if ($realEmail && env('GMAIL_APP_PASSWORD')) {
+            try {
+                Mail::mailer('gmail')
+                    ->to($realEmail)
+                    ->send(new AppointmentConfirmation($appointment));
+            } catch (\Throwable $e) {
+                \Log::warning('Confirmación de cita (Gmail) falló: ' . $e->getMessage());
+                $errors[] = 'Gmail';
+            }
+        }
+
+        $mailIcon = empty($errors) ? 'success' : 'warning';
+        $mailNote = empty($errors)
+            ? 'Cita registrada. Correos enviados a paciente, doctor y ' . $realEmail . '.'
+            : 'Cita registrada, pero falló el envío en: ' . implode(', ', $errors) . '. Revisa logs.';
 
         session()->flash('swal', [
-            'icon' => 'success',
+            'icon' => $mailIcon,
             'title' => '¡Cita creada!',
-            'text' => 'La cita médica se ha registrado y se enviaron los correos.',
+            'text' => $mailNote,
         ]);
 
         return redirect()->route('admin.admin.appointments.index');
@@ -194,6 +226,9 @@ class AppointmentCreator extends Component
 
     public function sendTestReport(): void
     {
+        $this->reportMsg = '';
+        $this->reportMsgType = '';
+
         $appointments = Appointment::with(['patient.user', 'doctor.user', 'doctor.speciality'])
             ->where('date', today()->toDateString())
             ->where('status', Appointment::STATUS_SCHEDULED)
@@ -201,7 +236,8 @@ class AppointmentCreator extends Component
             ->get();
 
         if ($appointments->isEmpty()) {
-            session()->flash('report_msg', 'warning|No hay citas agendadas para hoy.');
+            $this->reportMsgType = 'warning';
+            $this->reportMsg = 'No hay citas agendadas para hoy.';
             return;
         }
 
@@ -218,7 +254,66 @@ class AppointmentCreator extends Component
                 ->send(new DailyAppointmentReport($doctorAppointments, $doctor->name));
         }
 
-        session()->flash('report_msg', 'success|Reporte enviado a ' . $admins->count() . ' admin(s) y ' . $byDoctor->count() . ' doctor(es). Revisa Mailtrap.');
+        // Also send to the real admin email via Gmail SMTP if configured
+        $realEmail = config('mail.admin_real_email');
+        $realMailNote = '';
+        if ($realEmail && env('GMAIL_APP_PASSWORD')) {
+            try {
+                Mail::mailer('gmail')
+                    ->to($realEmail)
+                    ->send(new DailyAppointmentReport($appointments, 'Administrador'));
+                $realMailNote = ' También enviado a ' . $realEmail . ' (Gmail).';
+            } catch (\Throwable $e) {
+                \Log::warning('Gmail real email failed: ' . $e->getMessage());
+                $realMailNote = ' (Fallo envío a Gmail: ' . $e->getMessage() . ')';
+            }
+        } elseif ($realEmail) {
+            $realMailNote = ' [GMAIL_APP_PASSWORD no configurado — no se envió a ' . $realEmail . ']';
+        }
+
+        $this->reportMsgType = 'success';
+        $this->reportMsg = 'Reporte enviado a ' . $admins->count() . ' admin(s) y ' . $byDoctor->count() . ' doctor(es). Revisa Mailtrap.' . $realMailNote;
+    }
+
+    // Quick test: sends a confirmation email using the most recent appointment
+    public function sendTestEmail(): void
+    {
+        $this->reportMsg = '';
+        $this->reportMsgType = '';
+
+        $appointment = Appointment::with(['patient.user', 'doctor.user', 'doctor.speciality'])
+            ->latest()
+            ->first();
+
+        if (!$appointment) {
+            $this->reportMsgType = 'warning';
+            $this->reportMsg = 'No hay ninguna cita en la base de datos. Crea una primero.';
+            return;
+        }
+
+        try {
+            Mail::to($appointment->patient->user->email)
+                ->send(new AppointmentConfirmation($appointment));
+
+            $realNote = '';
+            $realEmail = config('mail.admin_real_email');
+            if ($realEmail && env('GMAIL_APP_PASSWORD')) {
+                try {
+                    Mail::mailer('gmail')
+                        ->to($realEmail)
+                        ->send(new AppointmentConfirmation($appointment));
+                    $realNote = ' + Gmail a ' . $realEmail;
+                } catch (\Throwable $e2) {
+                    $realNote = ' (Gmail falló: ' . $e2->getMessage() . ')';
+                }
+            }
+
+            $this->reportMsgType = 'success';
+            $this->reportMsg = 'Correo de prueba enviado (cita #' . $appointment->id . '). Revisa Mailtrap.' . $realNote;
+        } catch (\Throwable $e) {
+            $this->reportMsgType = 'warning';
+            $this->reportMsg = 'Error al enviar: ' . $e->getMessage();
+        }
     }
 
     public function render()

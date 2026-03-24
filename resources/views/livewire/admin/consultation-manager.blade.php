@@ -24,7 +24,7 @@
             </a>
 
             {{-- Consultas Anteriores --}}
-            <button wire:click="$set('showPreviousModal', true)"
+            <button wire:click="loadPreviousConsultations"
                     class="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition">
                 <i class="fa-solid fa-clock-rotate-left"></i> Consultas Anteriores
             </button>
@@ -204,20 +204,20 @@
                             <div class="flex items-center justify-between text-xs text-gray-400">
                                 <span>
                                     <i class="fa-solid fa-calendar-day mr-1"></i>
-                                    {{ $prev->appointment->date->format('d/m/Y') }}
+                                    {{ $prev['date'] }}
                                 </span>
                                 <span>
                                     <i class="fa-solid fa-user-doctor mr-1"></i>
-                                    Dr. {{ $prev->appointment->doctor->user->name ?? '—' }}
+                                    Dr. {{ $prev['doctor_name'] }}
                                 </span>
                             </div>
                             <div>
                                 <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Diagnóstico</p>
-                                <p class="text-sm text-gray-800 dark:text-white">{{ $prev->diagnosis }}</p>
+                                <p class="text-sm text-gray-800 dark:text-white">{{ $prev['diagnosis'] }}</p>
                             </div>
                             <div>
                                 <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Tratamiento</p>
-                                <p class="text-sm text-gray-700 dark:text-gray-300">{{ $prev->treatment }}</p>
+                                <p class="text-sm text-gray-700 dark:text-gray-300">{{ $prev['treatment'] }}</p>
                             </div>
                         </div>
                     @empty

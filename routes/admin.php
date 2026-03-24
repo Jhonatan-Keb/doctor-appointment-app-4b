@@ -31,8 +31,10 @@ Route::resource('doctors', DoctorController::class)->names('admin.doctors');
 Route::resource('insurances', InsuranceController::class)->names('admin.insurances');
 
 // Gestión de citas médicas
+Route::post('appointments/send-test-email', [AppointmentController::class, 'sendTestEmail'])->name('admin.appointments.send-test-email');
 Route::resource('appointments', AppointmentController::class)->names('admin.appointments');
 Route::get('appointments/{appointment}/consult', [AppointmentController::class, 'consult'])->name('admin.appointments.consult');
+Route::patch('appointments/{appointment}/complete', [AppointmentController::class, 'complete'])->name('admin.appointments.complete');
 
 // Horarios de doctores
 Route::get('doctors/{doctor}/schedules', [ScheduleController::class, 'index'])->name('admin.doctors.schedules');

@@ -163,11 +163,10 @@
             al administrador y a cada doctor con sus citas del día.
         </p>
 
-        @if(session('report_msg'))
-            @php [$type, $msg] = explode('|', session('report_msg'), 2); @endphp
-            <div class="mb-4 px-4 py-3 rounded-lg text-sm {{ $type === 'success' ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 text-green-700 dark:text-green-400' : 'bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 text-yellow-700 dark:text-yellow-400' }}">
-                <i class="fa-solid {{ $type === 'success' ? 'fa-circle-check' : 'fa-triangle-exclamation' }} mr-2"></i>
-                {{ $msg }}
+        @if($reportMsg)
+            <div class="mb-4 px-4 py-3 rounded-lg text-sm {{ $reportMsgType === 'success' ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 text-green-700 dark:text-green-400' : 'bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 text-yellow-700 dark:text-yellow-400' }}">
+                <i class="fa-solid {{ $reportMsgType === 'success' ? 'fa-circle-check' : 'fa-triangle-exclamation' }} mr-2"></i>
+                {{ $reportMsg }}
             </div>
         @endif
 
@@ -186,10 +185,10 @@
                 </p>
             </div>
 
-            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Prueba manual</p>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">
-                    Envía el reporte ahora con las citas de hoy. Llegará a tu bandeja de Mailtrap.
+            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-3">
+                <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Prueba manual</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                    Envía el reporte con las citas de hoy. Llegará a Mailtrap y al correo configurado en <code class="bg-gray-100 dark:bg-gray-700 px-1 rounded">ADMIN_REAL_EMAIL</code>.
                 </p>
                 <button wire:click="sendTestReport" wire:loading.attr="disabled"
                     class="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 transition disabled:opacity-60">
@@ -197,6 +196,22 @@
                         <i class="fa-solid fa-paper-plane mr-1"></i> Enviar reporte ahora
                     </span>
                     <span wire:loading wire:target="sendTestReport">
+                        <i class="fa-solid fa-spinner fa-spin mr-1"></i> Enviando...
+                    </span>
+                </button>
+
+                <hr class="border-gray-200 dark:border-gray-700">
+
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                    <i class="fa-solid fa-flask mr-1 text-purple-500"></i>
+                    <strong>Email de confirmación de prueba</strong> — envía el correo de la última cita registrada al instante.
+                </p>
+                <button wire:click="sendTestEmail" wire:loading.attr="disabled"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition disabled:opacity-60">
+                    <span wire:loading.remove wire:target="sendTestEmail">
+                        <i class="fa-solid fa-envelope mr-1"></i> Enviar email de prueba
+                    </span>
+                    <span wire:loading wire:target="sendTestEmail">
                         <i class="fa-solid fa-spinner fa-spin mr-1"></i> Enviando...
                     </span>
                 </button>

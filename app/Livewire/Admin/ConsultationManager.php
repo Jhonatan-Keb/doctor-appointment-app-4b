@@ -16,13 +16,12 @@ class ConsultationManager extends Component
     public $treatment = '';
     public $notes = '';
 
-    // Medications (prescription)
-    public $medications = [];
+    // Medications (prescription) - matches blade variable name
+    public $medicines = [];
 
     // UI state
     public $activeTab = 'consulta';
-    public $showHistoryModal = false;
-    public $showPreviousConsultationsModal = false;
+    public $showPreviousModal = false;
 
     // Previous consultations data
     public $previousConsultations = [];
@@ -34,9 +33,10 @@ class ConsultationManager extends Component
         'diagnosis' => 'required|string|min:3',
         'treatment' => 'required|string|min:3',
         'notes' => 'nullable|string',
-        'medications.*.name' => 'nullable|string',
-        'medications.*.dose' => 'nullable|string',
-        'medications.*.frequency' => 'nullable|string',
+        'medicines.*.name' => 'nullable|string',
+        'medicines.*.dose' => 'nullable|string',
+        'medicines.*.frequency' => 'nullable|string',
+        'medicines.*.duration' => 'nullable|string',
     ];
 
     protected $messages = [
@@ -62,12 +62,16 @@ class ConsultationManager extends Component
             $this->diagnosis = $this->appointment->consultation->diagnosis ?? '';
             $this->treatment = $this->appointment->consultation->treatment ?? '';
             $this->notes = $this->appointment->consultation->notes ?? '';
-            $this->medications = $this->appointment->consultation->prescription ?? [];
+            $prescription = $this->appointment->consultation->prescription ?? [];
+            // Ensure each medicine has the duration field
+            $this->medicines = array_map(function ($med) {
+                return array_merge(['name' => '', 'dose' => '', 'frequency' => '', 'duration' => ''], $med);
+            }, $prescription);
         }
 
-        // Ensure at least one empty medication row
-        if (empty($this->medications)) {
-            $this->medications = [['name' => '', 'dose' => '', 'frequency' => '']];
+        // Ensure at least one empty medicine row
+        if (empty($this->medicines)) {
+            $this->medicines = [['name' => '', 'dose' => '', 'frequency' => '', 'duration' => '']];
         }
 
         // Store patient history as plain array
@@ -80,18 +84,18 @@ class ConsultationManager extends Component
         ];
     }
 
-    public function addMedication()
+    public function addMedicine()
     {
-        $this->medications[] = ['name' => '', 'dose' => '', 'frequency' => ''];
+        $this->medicines[] = ['name' => '', 'dose' => '', 'frequency' => '', 'duration' => ''];
     }
 
-    public function removeMedication($index)
+    public function removeMedicine($index)
     {
-        unset($this->medications[$index]);
-        $this->medications = array_values($this->medications);
+        unset($this->medicines[$index]);
+        $this->medicines = array_values($this->medicines);
 
-        if (empty($this->medications)) {
-            $this->medications = [['name' => '', 'dose' => '', 'frequency' => '']];
+        if (empty($this->medicines)) {
+            $this->medicines = [['name' => '', 'dose' => '', 'frequency' => '', 'duration' => '']];
         }
     }
 
@@ -105,31 +109,58 @@ class ConsultationManager extends Component
             ->with(['consultation', 'doctor.user'])
             ->orderBy('date', 'desc')
             ->get()
+            ->map(function ($appt) {
+                return [
+                    'date' => $appt->date->format('d/m/Y'),
+                    'doctor_name' => $appt->doctor->user->name ?? '—',
+                    'diagnosis' => $appt->consultation->diagnosis ?? '',
+                    'treatment' => $appt->consultation->treatment ?? '',
+                ];
+            })
             ->toArray();
 
-        $this->showPreviousConsultationsModal = true;
+        $this->showPreviousModal = true;
     }
 
-    public function saveConsultation()
+    // Step 1: validate consulta fields and move to receta tab
+    public function saveConsulta()
     {
-        $this->validate();
+        $this->validate([
+            'diagnosis' => 'required|string|min:3',
+            'treatment' => 'required|string|min:3',
+            'notes' => 'nullable|string',
+        ]);
 
-        // Filter out empty medications
-        $prescription = array_filter($this->medications, function ($med) {
+        $this->activeTab = 'receta';
+    }
+
+    // Step 2: save full consultation with medicines and redirect
+    public function saveReceta()
+    {
+        $this->validate([
+            'diagnosis' => 'required|string|min:3',
+            'treatment' => 'required|string|min:3',
+            'notes' => 'nullable|string',
+            'medicines.*.name' => 'nullable|string',
+            'medicines.*.dose' => 'nullable|string',
+            'medicines.*.frequency' => 'nullable|string',
+            'medicines.*.duration' => 'nullable|string',
+        ]);
+
+        // Filter out empty medicines
+        $prescription = array_values(array_filter($this->medicines, function ($med) {
             return !empty($med['name']);
-        });
-
-        $consultationData = [
-            'appointment_id' => $this->appointmentId,
-            'diagnosis' => $this->diagnosis,
-            'treatment' => $this->treatment,
-            'notes' => $this->notes ?: null,
-            'prescription' => array_values($prescription) ?: null,
-        ];
+        }));
 
         Consultation::updateOrCreate(
             ['appointment_id' => $this->appointmentId],
-            $consultationData
+            [
+                'appointment_id' => $this->appointmentId,
+                'diagnosis' => $this->diagnosis,
+                'treatment' => $this->treatment,
+                'notes' => $this->notes ?: null,
+                'prescription' => $prescription ?: null,
+            ]
         );
 
         // Mark appointment as completed
