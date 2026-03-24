@@ -97,6 +97,18 @@ return [
             'retry_after' => 60,
         ],
 
+        // Gmail SMTP — para envíos a correo real (necesita App Password de Google)
+        // Port 587 negocia STARTTLS automáticamente con scheme 'smtp'
+        'gmail' => [
+            'transport' => 'smtp',
+            'host' => 'smtp.gmail.com',
+            'port' => 587,
+            'scheme' => 'smtp',
+            'username' => env('GMAIL_USERNAME'),
+            'password' => env('GMAIL_APP_PASSWORD'),
+            'timeout' => null,
+        ],
+
     ],
 
     /*
@@ -114,5 +126,7 @@ return [
         'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
+
+    'admin_real_email' => env('ADMIN_REAL_EMAIL', null),
 
 ];

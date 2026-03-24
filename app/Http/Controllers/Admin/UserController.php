@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Doctor;
 use App\Models\Patient;
 use App\Models\Role;
 use App\Models\User;
@@ -108,13 +109,36 @@ class UserController extends Controller
             $user->save();
         }
         $user->roles()->sync($data['role_id']);
+        $user->refresh(); // reload roles after sync
+
+        // If the user was switched to Doctor, create the doctor profile if missing
+        if ($user->hasRole('Doctor') && !$user->doctor) {
+            $doctor = $user->doctor()->create([]);
+            session()->flash('swal', [
+                'icon' => 'success',
+                'title' => 'Usuario actualizado',
+                'text' => 'Rol cambiado a Doctor. Completa el perfil médico.',
+            ]);
+            return redirect()->route('admin.admin.doctors.edit', $doctor);
+        }
+
+        // If the user was switched to Paciente, create the patient profile if missing
+        if ($user->hasRole('Paciente') && !$user->patient) {
+            $patient = $user->patient()->create([]);
+            session()->flash('swal', [
+                'icon' => 'success',
+                'title' => 'Usuario actualizado',
+                'text' => 'Rol cambiado a Paciente. Completa el perfil del paciente.',
+            ]);
+            return redirect()->route('admin.admin.patients.edit', $patient);
+        }
+
         session()->flash('swal', [
             'icon' => 'success',
             'title' => 'Usuario actualizado',
-            'text' => 'El usuario ha sido actualizado exitosamente'
-
+            'text' => 'El usuario ha sido actualizado exitosamente',
         ]);
-        return redirect()->route('admin.admin.users.edit', $user)->with('success', 'User updated successfully.');
+        return redirect()->route('admin.admin.users.edit', $user);
     }
 
     /**
