@@ -23,6 +23,9 @@ Route::resource('users', UserController::class)->names('admin.users');
 
 // Gestión de pacientes
 Route::resource('patients', PatientController::class)->names('admin.patients');
+Route::get('patients-import', [PatientController::class, 'importForm'])->name('admin.patients.import-form');
+Route::post('patients-import', [PatientController::class, 'import'])->name('admin.patients.import');
+Route::get('patients-import/template', [PatientController::class, 'downloadTemplate'])->name('admin.patients.import-template');
 
 // Gestión de doctores
 Route::resource('doctors', DoctorController::class)->names('admin.doctors');
